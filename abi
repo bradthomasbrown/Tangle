@@ -1,9 +1,0 @@
-#!/bin/sh
-
-home=/home/bradbrown
-
-cat abi.json | \
-solc \
-    --allow-paths $home/ERC20,$home/Farmable,$home/GentleMidnight \
-    --standard-json | \
-jq -Mc '..|.abi?|arrays'
