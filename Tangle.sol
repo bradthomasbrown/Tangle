@@ -10,4 +10,33 @@ contract Tangle is
 ERC20,
 Farmable,
 GentleMidnight
-{}
+{
+
+    address public owner;
+
+    constructor() {
+
+        // ERC20 init
+        name = "Tangle";
+        symbol = "TNGL";
+        decimals = 9;
+        uint finalSupply = 1e9 * decimals;
+        uint initSupply = finalSupply / 10;
+        totalSupply = initSupply;
+        balanceOf[msg.sender] += initSupply;
+
+        // Farmable init
+        generators['tangle'].M = finalSupply - initSupply;
+        generators['tangle'].C = 14016000;
+
+        // Tangle init
+        owner = msg.sender;
+
+    }
+
+    function setLiquidity(address _liquidity) external {
+        require(msg.sender == owner);
+        liquidity = ERC20(_liquidity);
+    }
+
+}
