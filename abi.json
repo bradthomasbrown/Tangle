@@ -1,0 +1,18 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "Tangle.sol": { "urls": ["/home/bradbrown/Tangle/Tangle.sol"] }
+    },
+    "settings": {
+        "remappings": [
+            "@ERC20=/home/bradbrown/ERC20",
+            "@Farmable=/home/bradbrown/Farmable",
+            "@GentleMidnight=/home/bradbrown/GentleMidnight"
+        ],
+        "outputSelection": {
+            "Tangle.sol": {
+                "Tangle": ["abi"]
+            }
+        }
+    }
+}

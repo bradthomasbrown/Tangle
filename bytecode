@@ -1,0 +1,11 @@
+#!/bin/sh
+
+home=/home/bradbrown
+
+bytecode=$(cat bytecode.json | \
+solc \
+    --allow-paths $home/ERC20,$home/Farmable,$home/GentleMidnight \
+    --standard-json | \
+jq -Mc '..|.object?|strings' | tr -d '"')
+echo $bytecode
+echo "$(expr length $bytecode / 2)" bytes
