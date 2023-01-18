@@ -6,6 +6,6 @@ docker run \
     --net foo \
     --name YankeeFootball \
     --rm \
-    -v /home/bradbrown/HelpfulCandlewax:/app/HelpfulCandlewax:ro \
+    -v ~/HelpfulCandlewax:/app/HelpfulCandlewax:ro \
     -it \
     yankeefootball
