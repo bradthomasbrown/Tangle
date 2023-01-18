@@ -4,7 +4,7 @@ import { ethers } from 'ethers'
 import { RG, SS } from './HelpfulCandlewax/index.mjs'
 import { EventEmitter } from 'events'
 
-let { providers: { JsonRpcProvider }, Wallet, ContractFactory } = ethers
+let { providers: { JsonRpcProvider }, Wallet, ContractFactory, constants: { AddressZero } } = ethers
 
 new class _ extends EventEmitter {
 
@@ -15,51 +15,56 @@ new class _ extends EventEmitter {
 
     async init() {
         console.log('initializing')
-        Object.assign(this, await new RG({ url: 'VariantEddy', verbose: true }))
+        this.data = await new RG({ url: 'VariantEddy', path: '/shutdown' })
         this.provider = new JsonRpcProvider('http://HurtfulBeanstalk:8545')
         this.wallet = new Wallet.createRandom().connect(this.provider)
-        this.factory = new ContractFactory(this.abi, this.object, this.wallet)
-        this.deploy()
+        await this.deploy('Tangle')
+        await this.deploy('WETH9')
+        await this.deploy('UniswapV2Factory')
+        await this.deploy('UniswapV2Router02')
+        new SS({ ...this.data, verbose: true })
     }
 
-    deploy() {
-        console.log('deploying')
-        this.factory.deploy()
-        .then(this.success.bind(this))
-        .catch(this.fail.bind(this))
+    async deploy(name) {
+        console.log(`deploying ${name}`)
+        let { abi, object } = this.data[name]
+        let factory = new ContractFactory(abi, object, this.wallet)
+        let args = []
+        if (name == 'UniswapV2Factory') args = [AddressZero]
+        if (name == 'UniswapV2Router02') args = [this.data.UniswapV2Factory.address, this.data.WETH9.address]
+        await factory.deploy(...args)
+        .then(contract => { return this.success(contract, name) })
+        .catch(error => { return this.fail(error, name) })
     }
 
-    async success(contract) {
-        console.log('deploy success')
-        await contract.deployTransaction.wait()
-        await new RG({ url: 'VariantEddy', 'path': '/shutdown', verbose: true })
-        let { abi, object } = this
-        let { address } = contract
-        new SS({ data: { abi, object, address }, verbose: true })
+    async success(contract, name) {
+        console.log(`${name} deploy success, address ${contract.address}`)
+        this.data[name].address = contract.address
     }
 
-    fail(error) {
-        console.log('deploy fail')
+    async fail(error, name) {
+        console.log(`${name} deploy fail`)
         error = error.toString()
         switch (true) {
-        case !!error.match('gas required exceeds allowance'): this.drink(); break
-        case !!error.match('could not detect network'): this.handleNetworkDetectError(); break
+        case !!error.match('gas required exceeds allowance'): await this.drink(name); break
+        case !!error.match('could not detect network'): await this.handleNetworkDetectError(name); break
         default: throw error
         }
     }
 
-    async drink() {
-        console.log('requesting native from faucet')
-        let tx = await new RG({ url: 'HurtfulBeanstalk', path: `/${this.wallet.address}`, verbose: true })
+    async drink(name) {
+        console.log(`${name} faucet request`)
+        let tx = await new RG({ url: 'HurtfulBeanstalk', path: `/${this.wallet.address}` })
         await this.provider.waitForTransaction(tx)
-        this.deploy()
+        await this.deploy(name)
     }
 
-    handleNetworkDetectError() {
-        console.log('network detect error')
+    async handleNetworkDetectError(name) {
+        console.log(`${name} network detect error`)
         if (!this.start) this.start = Date.now()
         if (Date.now() - this.start >= 30000) throw 'network detect timeout'
-        setTimeout(this.deploy.bind(this), 100)
+        await new Promise(_ => setTimeout(_, 100))
+        await this.deploy(name)
     }
 
 }()
