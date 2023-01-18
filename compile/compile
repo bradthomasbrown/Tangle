@@ -1,0 +1,7 @@
+#!/bin/sh
+cd "$(dirname "$0")"
+
+cat compile.json | \
+./solc \
+    --allow-paths=/app/Tangle/contracts \
+    --standard-json

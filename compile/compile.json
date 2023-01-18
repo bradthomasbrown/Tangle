@@ -1,0 +1,22 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "Tangle": { "urls": ["/app/Tangle/contracts/Tangle.sol"] }
+    },
+    "settings": {
+        "viaIR": true,
+        "optimizer": {
+            "enabled": true
+        },
+        "remappings": [
+            "@ERC20=/app/Tangle/contracts/ERC20",
+            "@Farmable=/app/Tangle/contracts/Farmable",
+            "@GentleMidnight=/app/Tangle/contracts/GentleMidnight"
+        ],
+        "outputSelection": {
+            "Tangle": {
+                "Tangle": [ "abi", "evm.bytecode.object" ]
+            }
+        }
+    }
+}
