@@ -4,26 +4,48 @@ import { execSync } from 'child_process'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { SS } from './HelpfulCandlewax/index.mjs'
 
-let help = '/app/HelpfulCandlewax'
-
-function getHash() {
-    return execSync('ls -lR ERC20 Farmable GentleMidnight Tangle | md5sum | tr -d " -"').toString().replace('\n', '')
+let conf = {
+    Tangle: {
+        dir: 'Tangle/contracts'
+        compilerPath: './Tangle/compile'
+    },
+    WETH9: {
+        dir: 'Uniswap/WETH9'
+        compilerPath: './Uniswap/compile/WETH9'
+    },
+    UniswapV2Factory: {
+        dir: 'Uniswap/v2-core'
+        compilerPath: './Uniswap/compile/UniswapV2Factory'
+    },
+    UniswapV2Router02: {
+        dir: 'Uniswap/v2-periphery'
+        compilerPath: './Uniswap/compile/UniswapV2Router02'
+    }
 }
 
-function compile() {
-    let compile = execSync('cat compile.json | solc --standard-json')
+function getHash(contract) {
+    let { dir } = conf[contract]
+    return execSync(`ls -lR ${dir} | md5sum | tr -d " -"`).toString().replace('\n', '')
+}
+
+function compile(contract) {
+    let { path } = conf[contract]
+    let compile = execSync(`${path}/compile`)
     let { contracts } = JSON.parse(compile)
-    let { Tangle: { abi, evm: { bytecode: { object } } } } = contracts['Tangle.sol']
-    let data = { abi, object, hash: getHash() }
-    writeFileSync(`${help}/Tangle.json`, JSON.stringify(data))
-    return TangleJson
+    let { [contract]: { abi, evm: { bytecode: { object } } } } = contracts[contract]
+    let data = { abi, object, hash: getHash(contract) }
+    writeFileSync(`./tmp/${contract}.json`, JSON.stringify(data))
+    return data
 }
 
-let TangleJsonExists = existsSync(`${help}/Tangle.json`)
-let TangleJson
-if (TangleJsonExists) {
-    TangleJson = JSON.parse(readFileSync(`${help}/Tangle.json`, 'utf8'))
-    if (getHash() != TangleJson.hash) TangleJson = compile()
-} else TangleJson = compile()
-let { abi, object } = TangleJson
-new SS({ data: { abi, object }, verbose: true })
+let names = Object.keys(conf)
+let contracts = {}
+for (let i = 0; i < names.length; i++) {
+    let name = names[i]
+    let exists = existsSync(`./tmp/${name}.json`)
+    let json = exists ? JSON.parse(readFileSync(`./tmp/${name}.json`, 'utf8')) : compile(name)
+    if (exists && getHash(name) != json.hash) json = compile(name)
+    let { abi, object } = json
+    contracts[name] = { abi, object }
+}
+new SS({ data: contracts, verbose: true })
