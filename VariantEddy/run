@@ -1,0 +1,16 @@
+#!/bin/bash
+
+docker build -t varianteddy .
+
+docker run \
+    --net foo \
+    --name VariantEddy \
+    --rm \
+    -v /home/bradbrown/ERC20:/app/ERC20:ro \
+    -v /home/bradbrown/Farmable:/app/Farmable:ro \
+    -v /home/bradbrown/GentleMidnight:/app/GentleMidnight:ro \
+    -v /home/bradbrown/Tangle:/app/Tangle:ro \
+    -v /home/bradbrown/Uniswap:/app/Uniswap:ro \
+    -v /home/bradbrown/HelpfulCandlewax:/app/HelpfulCandlewax \
+    -it \
+    varianteddy
