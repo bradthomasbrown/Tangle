@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cat compile.json | \
+./solc \
+    --allow-paths=~/Tangle \
+    --standard-json
