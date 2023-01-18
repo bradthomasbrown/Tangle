@@ -6,11 +6,10 @@ docker run \
     --net foo \
     --name VariantEddy \
     --rm \
-    -v ~/ERC20:/app/ERC20:ro \
-    -v ~/Farmable:/app/Farmable:ro \
-    -v ~/GentleMidnight:/app/GentleMidnight:ro \
-    -v ~/Tangle:/app/Tangle:ro \
-    -v ~/Uniswap:/app/Uniswap:ro \
-    -v ~/HelpfulCandlewax:/app/HelpfulCandlewax \
+    -v ~/Tangle/contracts:/app/Tangle/contracts \
+    -v ~/Tangle/compile:/app/Tangle/compile \
+    -v ~/Tangle/testing/HelpfulCandlewax:/app/HelpfulCandlewax \
+    -v ~/Tangle/testing/tmp:/app/tmp \
+    -v ~/Uniswap:/app/Uniswap \
     -it \
     varianteddy
