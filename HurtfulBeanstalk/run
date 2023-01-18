@@ -1,0 +1,11 @@
+#!/bin/bash
+
+docker build -t hurtfulbeanstalk .
+
+docker run \
+    --net foo \
+    --name HurtfulBeanstalk \
+    --rm \
+    -v /home/bradbrown/HelpfulCandlewax:/app/HelpfulCandlewax:ro \
+    -it \
+    hurtfulbeanstalk
