@@ -3,6 +3,7 @@
 docker build -t tangyscrap .
 
 docker run \
+    --init \
     --net foo \
     --name TangyScrap \
     --rm \

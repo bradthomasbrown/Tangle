@@ -3,6 +3,7 @@
 docker build -t varianteddy .
 
 docker run \
+    --init \
     --net foo \
     --name VariantEddy \
     --rm \

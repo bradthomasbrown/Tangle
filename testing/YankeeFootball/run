@@ -3,6 +3,7 @@
 docker build -t yankeefootball .
 
 docker run \
+    --init \
     --net foo \
     --name YankeeFootball \
     --rm \

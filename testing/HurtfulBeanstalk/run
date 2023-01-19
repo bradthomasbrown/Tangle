@@ -3,6 +3,7 @@
 docker build -t hurtfulbeanstalk .
 
 docker run \
+    --init \
     --net foo \
     --name HurtfulBeanstalk \
     --rm \
