@@ -31,7 +31,7 @@ new class _ {
             BigInt(parseInt(Date.now() / 1000) + 60),
             { value: 1n * 10n ** 17n }
         )
-        new SS({ ...this.data, verbose: true })
+        new SS({ data: this.data, verbose: true })
     }
 
     async deploy(name) {
@@ -47,6 +47,7 @@ new class _ {
     }
 
     async success(contract, name) {
+        await contract.deployTransaction.wait()
         console.log(`${name} deploy success, address ${contract.address}`)
         this.data[name].address = contract.address
     }
