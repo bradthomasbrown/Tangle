@@ -1,0 +1,11 @@
+#!/bin/bash
+
+docker build -t tangyscrap .
+
+docker run \
+    --net foo \
+    --name TangyScrap \
+    --rm \
+    -v ~/Tangle/testing/HelpfulCandlewax:/app/HelpfulCandlewax:ro \
+    -it \
+    tangyscrap
