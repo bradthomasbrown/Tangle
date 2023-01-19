@@ -18,8 +18,8 @@ hasVarBalanceOf
         address to, 
         uint value
     ) external {
-        allowance[from][to] -= value;
-        move(balanceOf, msg.sender, to, value);
+        allowance[from][msg.sender] -= value;
+        move(balanceOf, from, to, value);
         emit Transfer(from, to, value);
     }
 
