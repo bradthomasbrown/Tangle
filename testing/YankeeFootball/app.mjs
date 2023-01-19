@@ -2,26 +2,35 @@
 
 import { ethers } from 'ethers'
 import { RG, SS } from './HelpfulCandlewax/index.mjs'
-import { EventEmitter } from 'events'
 
-let { providers: { JsonRpcProvider }, Wallet, ContractFactory, constants: { AddressZero } } = ethers
+let { providers: { JsonRpcProvider }, Wallet, ContractFactory, constants: { AddressZero }, Contract } = ethers
 
-new class _ extends EventEmitter {
+new class _ {
 
-    constructor() {
-        super()
-        this.init()
-    }
+    constructor() { this.init() }
 
     async init() {
         console.log('initializing')
-        this.data = await new RG({ url: 'VariantEddy', path: '/shutdown' })
+        this.data = await new RG({ url: 'VariantEddy', path: '/shutdown', verbose: true })
         this.provider = new JsonRpcProvider('http://HurtfulBeanstalk:8545')
         this.wallet = new Wallet.createRandom().connect(this.provider)
         await this.deploy('Tangle')
         await this.deploy('WETH9')
         await this.deploy('UniswapV2Factory')
         await this.deploy('UniswapV2Router02')
+        let { Tangle, UniswapV2Router02, UniswapV2Factory } = this.data
+        let tangle = new Contract(Tangle.address, Tangle.abi, this.wallet)
+        let router = new Contract(UniswapV2Router02.address, UniswapV2Router02.abi, this.wallet)
+        await tangle.approve(UniswapV2Router02.address, 10n * 10n ** 6n)
+        await router.addLiquidityETH(
+            this.data.Tangle.address,
+            10n * 10n ** 6n,
+            0n,
+            1n * 10n ** 17n,
+            this.wallet.address,
+            BigInt(parseInt(Date.now() / 1000) + 60),
+            { value: 1n * 10n ** 17n }
+        )
         new SS({ ...this.data, verbose: true })
     }
 
