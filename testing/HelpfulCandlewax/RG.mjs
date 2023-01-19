@@ -30,7 +30,7 @@ export class RG extends EventEmitter {
     handleError(error) {
         if (this.verbose) console.log('handling error')
         if (!this.start) this.start = Date.now()
-        if (Date.now() - this.start >= this.timeout ?? 30000) this.reject(`rg timeout, last error: ${error}`)
+        if (Date.now() - this.start >= (this.timeout ?? 30000)) this.reject(`rg timeout, last error: ${error}`)
         else setTimeout(this.attemptGet.bind(this), this.int ?? 100)
     }
 
