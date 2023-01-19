@@ -6,7 +6,7 @@ COPY geth /usr/local/bin
 CMD geth \
         --dev \
         --http \
-        --http.api eth,web3,net \
+        --http.api eth,web3,net,debug \
         --http.corsdomain "*" \
         --http.addr "0.0.0.0" \
         --http.vhosts "*" & \
