@@ -6,19 +6,19 @@ import { SS } from './HelpfulCandlewax/index.mjs'
 
 let conf = {
     Tangle: {
-        dir: 'Tangle/contracts'
+        dir: 'Tangle/contracts',
         compilerPath: './Tangle/compile'
     },
     WETH9: {
-        dir: 'Uniswap/WETH9'
+        dir: 'Uniswap/WETH9',
         compilerPath: './Uniswap/compile/WETH9'
     },
     UniswapV2Factory: {
-        dir: 'Uniswap/v2-core'
+        dir: 'Uniswap/v2-core',
         compilerPath: './Uniswap/compile/UniswapV2Factory'
     },
     UniswapV2Router02: {
-        dir: 'Uniswap/v2-periphery'
+        dir: 'Uniswap/v2-periphery Uniswap/v2-core',
         compilerPath: './Uniswap/compile/UniswapV2Router02'
     }
 }
@@ -29,8 +29,9 @@ function getHash(contract) {
 }
 
 function compile(contract) {
-    let { path } = conf[contract]
-    let compile = execSync(`${path}/compile`)
+    console.log(`compiling ${contract}`)
+    let { compilerPath } = conf[contract]
+    let compile = execSync(`${compilerPath}/compile`)
     let { contracts } = JSON.parse(compile)
     let { [contract]: { abi, evm: { bytecode: { object } } } } = contracts[contract]
     let data = { abi, object, hash: getHash(contract) }
