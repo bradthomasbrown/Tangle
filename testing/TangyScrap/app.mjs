@@ -48,10 +48,6 @@ class _ {
         case roll <= foo('addLiquidity'): await this.addLiquidity(); break
         case roll <= foo('removeLiquidity'): await this.removeLiquidity(); break
         case roll <= foo('adjustStake'): await this.adjustStake(); break }
-        console.log(parseFloat(await this.tangle.balanceOf(this.wallet.address)) / 1e9)
-        let result = await this.tangle.available([{ generator: 'tangle', farm: 'airdrop' }])
-        result = result[0].available.toString()
-        writeFileSync(`foo-${this.x}`, `${Date.now()}\t${result}\n`, { flag: 'a' })
         setTimeout(_ => { this.roll() }, ((Math.random() * 4) + 1) * this.x)
     }
 
@@ -95,12 +91,12 @@ class _ {
 
     async airdrop() {
         console.log('airdrop')
-        if (await this.tangle.balanceOf(this.wallet.address) <= 1e9) return
+        let count = 1
+        if (await this.tangle.balanceOf(this.wallet.address) <= 1e9 * count) return
         let addresses = []
-        for (let i = 0; i < 1; i++) addresses.push(new Wallet.createRandom().address)
-        let tx = await this.tangle.airdrop(addresses, { gasLimit: 300000 })
-        tx = await tx.wait().catch(error => console.log('airdrop rejected', error))
-        console.log(tx.cumulativeGasUsed.toString())
+        for (let i = 0; i < count; i++) addresses.push(new Wallet.createRandom().address)
+        let tx = await this.tangle.airdrop(addresses, { gasLimit: 270000 + 30000 * count })
+        await tx.wait().catch(error => console.log('airdrop rejected', error))
     }
 
     async claim() {
