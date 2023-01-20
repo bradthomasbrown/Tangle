@@ -22,7 +22,7 @@ hasVarGenerators
         Farm storage farm = generator.farms['airdrop'];
         Account storage account = farm.accounts[msg.sender];
         adjustPoints(generator, farm, account, 1);
-        move(balanceOf, msg.sender, recipient, 1);
+        move(balanceOf, msg.sender, recipient, 1e9);
     }
 
 }
