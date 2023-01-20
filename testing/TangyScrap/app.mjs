@@ -5,6 +5,39 @@ import { RG } from './HelpfulCandlewax/index.mjs'
 import { writeFileSync } from 'fs'
 let { providers: { JsonRpcProvider }, Wallet, Contract } = ethers
 
+let ERC20Abi = [
+    {
+        inputs: [
+            { internalType: 'address', name: 'spender', type: 'address' },
+            { internalType: 'uint256', name: 'value', type: 'uint256' }
+        ],
+        name: 'approve',
+        outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+        stateMutability: 'nonpayable',
+        type: 'function'
+    },
+    {
+        inputs: [{ internalType: 'address', name: '', type: 'address'}],
+        name: 'balanceOf',
+        outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+        stateMutability: 'view',
+        type: 'function'
+    }
+]
+
+let weights = {
+    buy: 10,
+    sell: 10,
+    airdrop: 50,
+    claim: 5,
+    exchange: 2,
+    addLiquidity: 1,
+    removeLiquidity: 1,
+    adjustStake: 1
+}
+
+let foo = () => Object.entries(weights).reduce((p, c, _, a) => p - c[1] < 0 ? (a.splice(1), c[0]): p - c[1], Math.random() * Object.values(weights).reduce((p, c) => p + c))
+
 class _ {
 
     constructor(x) {
@@ -14,115 +47,131 @@ class _ {
 
     async init() {
         console.log('init')
+        this.balances = { tangle: 0, native: 0, liquidity: 0 }
         this.data = await new RG({ url: 'YankeeFootball' })
         this.provider = new JsonRpcProvider('http://HurtfulBeanstalk:8545')
         this.wallet = new Wallet.createRandom().connect(this.provider)
-        let { Tangle, UniswapV2Router02, WETH9 } = this.data
-        this.weth = new Contract(WETH9.address, WETH9.abi, this.wallet)
+        let { Tangle, UniswapV2Router02, WETH9, UniswapV2Factory } = this.data
         this.tangle = new Contract(Tangle.address, Tangle.abi, this.wallet)
+        this.weth = new Contract(WETH9.address, WETH9.abi, this.wallet)
+        this.factory = new Contract(UniswapV2Factory.address, UniswapV2Factory.abi, this.wallet)
         this.router = new Contract(UniswapV2Router02.address, UniswapV2Router02.abi, this.wallet)
+        let liquidityAddress = await this.factory.getPair(this.weth.address, this.tangle.address)
+        this.liquidity = new Contract(liquidityAddress, ERC20Abi, this.wallet)
+        this.paths = {
+            tangle: [this.weth.address, this.tangle.address],
+            weth: [this.tangle.address, this.weth.address]
+        }
+        await this.drink()
+        await this.approve()
         this.roll()
     }
 
     async roll() {
-
-        let weights = {
-            buy: 10,
-            sell: 10,
-            airdrop: 50,
-            claim: 5,
-            exchange: 2,
-            addLiquidity: 1,
-            removeLiquidity: 1,
-            adjustStake: 1
-        }
-        let foo = key => Object.values(weights).reduce((p, c, i) => (p[0] += c, p[1] = i == Object.keys(weights).indexOf(key) ? p[0] : p[1], p), [0, 0]).reduce((p, c) => c / p)
-
-        let roll = Math.random()
-        switch (true) {
-        case roll <= foo('buy'): await this.buy(); break
-        case roll <= foo('sell'): await this.sell(); break
-        case roll <= foo('airdrop'): await this.airdrop(); break
-        case roll <= foo('claim'): await this.claim(); break
-        case roll <= foo('exchange'): await this.exchange(); break
-        case roll <= foo('addLiquidity'): await this.addLiquidity(); break
-        case roll <= foo('removeLiquidity'): await this.removeLiquidity(); break
-        case roll <= foo('adjustStake'): await this.adjustStake(); break }
+        let action = foo(); console.log(action); await this[action]()
+        this.balances.native = await this.provider.getBalance(this.wallet.address)
+        this.balances.tangle = await this.tangle.balanceOf(this.wallet.address)
+        this.balances.liquidity = await this.liquidity.balanceOf(this.wallet.address)
+        await this.log()
         setTimeout(_ => { this.roll() }, ((Math.random() * 4) + 1) * this.x)
     }
 
     async buy() {
-        console.log('buy')
-        if (await this.provider.getBalance(this.wallet.address) <= 0) await this.drink()
-        let balance = await this.provider.getBalance(this.wallet.address)
-        let value = BigInt(parseInt((Math.random() * 0.2 + 0.05) * balance))
-        let tx = await this.router.swapExactETHForTokens(
+        await (await this.router.swapExactETHForTokens(
             0, 
-            [this.weth.address, this.tangle.address], 
+            this.paths.tangle, 
             this.wallet.address, 
-            parseInt(Date.now() / 1000) + 60, 
-            { value, gasLimit: 250000 }
-        )
-        await tx.wait().catch(error => console.log('buy rejected', error))
+            this.nowPlus(60), 
+            { 
+                value: this.rand(this.balances.native), 
+                gasLimit: 250000 
+            }
+        )).wait()
     }
 
     async sell() {
-        console.log('sell')
-        if (await this.tangle.balanceOf(this.wallet.address) <= 0) return
-        let balance = await this.tangle.balanceOf(this.wallet.address)
-        let value = BigInt(parseInt((Math.random() * 0.2 + 0.05) * balance))
-        if (await this.tangle.allowance(this.wallet.address, this.router.address) < value) await this.approve()
-        let tx = await this.router.swapExactTokensForETH(
-            value,
+        if (this.balances.tangle == 0) return
+        await (await this.router.swapExactTokensForETH(
+            this.rand(this.balances.tangle),
             0,
-            [this.tangle.address, this.weth.address],
+            this.paths.weth,
             this.wallet.address,
-            parseInt(Date.now() / 1000) + 60,
+            this.nowPlus(60),
             { gasLimit: 250000 }
-        )
-        await tx.wait().catch(error => console.log('sell rejected', error))
-    }
-
-    async approve() {
-        console.log('approve')
-        let tx = await this.tangle.approve(this.router.address, 2n << 128n)
-        await tx.wait().catch(error => console.log('approve rejected', error))
+        )).wait()
     }
 
     async airdrop() {
-        console.log('airdrop')
         let count = 1
         if (await this.tangle.balanceOf(this.wallet.address) <= 1e9 * count) return
         let addresses = []
         for (let i = 0; i < count; i++) addresses.push(new Wallet.createRandom().address)
-        let tx = await this.tangle.airdrop(addresses, { gasLimit: 270000 + 30000 * count })
-        await tx.wait().catch(error => console.log('airdrop rejected', error))
+        await (await this.tangle.airdrop(addresses, { gasLimit: 270000 + 30000 * count })).wait()
     }
 
     async claim() {
-        console.log('claim')
+
     }
 
     async exchange() {
-        console.log('exchange')
+
     }
 
     async addLiquidity() {
-        console.log('addLiquidity')
+        if (this.balances.tangle == 0 || this.balances.native == 0) return
+        await (await this.router.addLiquidityETH(
+            this.tangle.address,
+            this.rand(this.balances.tangle),
+            0,
+            0,
+            this.wallet.address,
+            this.nowPlus(60),
+            { value: this.rand(this.balances.native), gasLimit: 500000 }
+        )).wait()
     }
 
     async removeLiquidity() {
-        console.log('removeLiquidity')
+        if (this.balances.liquidity == 0) return
+        await (await this.router.removeLiquidityETH(
+            this.tangle.address,
+            this.rand(this.balances.liquidity),
+            0,
+            0,
+            this.wallet.address,
+            this.nowPlus(60),
+            { gasLimit: 500000 }
+        )).wait()
     }
 
     async adjustStake() {
-        console.log('adjustStake')
+        
     }
 
     async drink() {
         console.log('drink')
-        let hash = await new RG({ url: 'HurtfulBeanstalk', path: `/${this.wallet.address}` })
-        await this.provider.waitForTransaction(hash)
+        await this.provider.waitForTransaction(await new RG({ url: 'HurtfulBeanstalk', path: `/${this.wallet.address}` }))
+    }
+
+    async approve() {
+        console.log('approve')
+        await (await this.tangle.approve(this.router.address, 2n << 128n)).wait()
+        await (await this.liquidity.approve(this.router.address, 2n << 128n)).wait()
+    }
+
+    foo(value) {
+        return BigInt(parseInt((Math.random() * 0.2 + 0.05) * value))
+    }
+
+    async log() {
+        writeFileSync('foo', `${this.balances.native},${this.balances.tangle},${this.balances.liquidity}\n`, { flag: 'a'})
+    }
+
+    nowPlus(x) {
+        return parseInt(Date.now() / 1000) + x
+    }
+
+    rand(x) {
+        return BigInt(parseInt((Math.random() * 0.2 + 0.05) * x))
     }
 
 }
