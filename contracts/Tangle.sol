@@ -30,7 +30,7 @@ GentleMidnight
         generators['tangle'].C = 14016000;
         generators['tangle'].I = block.timestamp;
         generators['tangle'].farms['airdrop'].N = 1;
-        generators['tangle'].farms['airdrop'].D = 1;
+        generators['tangle'].farms['airdrop'].D = 10;
 
         // Tangle init
         owner = msg.sender;
