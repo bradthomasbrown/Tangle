@@ -16,7 +16,7 @@ export class RG extends EventEmitter {
     attemptGet() {
         if (this.verbose) console.log('attempting get')
         let req = get(`http://${this.url}${this.path ?? '/'}`, this.handleResponse.bind(this))
-        req.on('error', this.handleError.bind(this))
+        req.on('error', error => { this.handleError(error) })
     }
 
     handleResponse(response) {
@@ -31,7 +31,7 @@ export class RG extends EventEmitter {
         if (this.verbose) console.log('handling error')
         if (!this.start) this.start = Date.now()
         if (Date.now() - this.start >= (this.timeout ?? 30000)) this.reject(`rg timeout, last error: ${error}`)
-        else setTimeout(this.attemptGet.bind(this), this.int ?? 100)
+        else setTimeout(() => { this.attemptGet() }, this.int ?? 100)
     }
 
 }
