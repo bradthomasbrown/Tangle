@@ -9,7 +9,8 @@ function _available(
     Farm storage farm,
     Account storage account    
 ) view returns (uint) {
+    if (farm.P == 0) return 0;
     uint R = generated(generator);
     uint S = farm.S + farm.N * (R - farm.R) / farm.P / farm.D;
-    return account.R + account.P * (S - account.S);
+    return account.R + account.P * (S - account.S) / 1e38;
 }

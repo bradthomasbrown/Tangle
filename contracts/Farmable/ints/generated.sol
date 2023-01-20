@@ -7,5 +7,5 @@ import '../structs/Generator.sol';
 function generated(
     Generator storage self
 ) view returns (uint) {
-    return self.M - self.C * (self.M - self.R) / (block.timestamp - self.I + self.C - self.T);
+    return (self.M - self.C * (self.M - self.R) / (block.timestamp - self.I + self.C - self.T)) * 1e38;
 }
