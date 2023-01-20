@@ -20,7 +20,7 @@ GentleMidnight
         name = "Tangle";
         symbol = "TNGL";
         decimals = 9;
-        uint finalSupply = 1e9 * decimals;
+        uint finalSupply = 1e9 * 10 ** decimals;
         uint initSupply = finalSupply / 10;
         totalSupply = initSupply;
         balanceOf[msg.sender] += initSupply;
@@ -28,6 +28,9 @@ GentleMidnight
         // Farmable init
         generators['tangle'].M = finalSupply - initSupply;
         generators['tangle'].C = 14016000;
+        generators['tangle'].I = block.timestamp;
+        generators['tangle'].farms['airdrop'].N = 1;
+        generators['tangle'].farms['airdrop'].D = 1;
 
         // Tangle init
         owner = msg.sender;
