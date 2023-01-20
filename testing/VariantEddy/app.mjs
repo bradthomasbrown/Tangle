@@ -32,6 +32,7 @@ function compile(contract) {
     console.log(`compiling ${contract}`)
     let { compilerPath } = conf[contract]
     let compile = execSync(`${compilerPath}/compile`)
+    console.log(JSON.parse(compile))
     let { contracts } = JSON.parse(compile)
     let { [contract]: { abi, evm: { bytecode: { object } } } } = contracts[contract]
     let data = { abi, object, hash: getHash(contract) }
