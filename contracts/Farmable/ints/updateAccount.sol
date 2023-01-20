@@ -8,6 +8,6 @@ function updateAccount(
     Farm storage farm,
     Account storage account    
 ) {
-    account.R += account.P * (farm.S - account.S) / 1e38;
+    account.R += account.P * (farm.S - account.S) / 1e50;
     account.S = farm.S;
 }

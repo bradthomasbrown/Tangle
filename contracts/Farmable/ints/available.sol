@@ -12,5 +12,5 @@ function _available(
     if (farm.P == 0) return 0;
     uint R = generated(generator) / farm.D;
     uint S = farm.S + farm.N * (R - farm.R) / farm.P;
-    return account.R + account.P * (S - account.S) / 1e38;
+    return account.R + account.P * (S - account.S) / 1e50;
 }
