@@ -18,15 +18,16 @@ new class _ {
         await this.deploy('WETH9')
         await this.deploy('UniswapV2Factory')
         await this.deploy('UniswapV2Router02')
-        let { Tangle, UniswapV2Router02, UniswapV2Factory } = this.data
+        let { Tangle, UniswapV2Router02 } = this.data
         let tangle = new Contract(Tangle.address, Tangle.abi, this.wallet)
         let router = new Contract(UniswapV2Router02.address, UniswapV2Router02.abi, this.wallet)
-        await tangle.approve(UniswapV2Router02.address, 10n * 10n ** 6n)
+        let balance = await tangle.balanceOf(this.wallet.address)
+        await tangle.approve(UniswapV2Router02.address, BigInt(balance) / 2n)
         await router.addLiquidityETH(
             this.data.Tangle.address,
-            10n * 10n ** 6n,
+            BigInt(balance) / 2n,
             0n,
-            1n * 10n ** 17n,
+            0n,
             this.wallet.address,
             BigInt(parseInt(Date.now() / 1000) + 60),
             { value: 1n * 10n ** 17n }
