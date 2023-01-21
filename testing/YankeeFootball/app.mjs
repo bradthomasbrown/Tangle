@@ -18,8 +18,10 @@ new class _ {
         await this.deploy('WETH9')
         await this.deploy('UniswapV2Factory')
         await this.deploy('UniswapV2Router02')
-        let { Tangle, UniswapV2Router02 } = this.data
+        let { Tangle, UniswapV2Router02, UniswapV2Factory, WETH9 } = this.data
         let tangle = new Contract(Tangle.address, Tangle.abi, this.wallet)
+        let weth = new Contract(WETH9.address, WETH9.abi, this.wallet)
+        let factory = new Contract(UniswapV2Factory.address, UniswapV2Factory.abi, this.wallet)
         let router = new Contract(UniswapV2Router02.address, UniswapV2Router02.abi, this.wallet)
         let balance = await tangle.balanceOf(this.wallet.address)
         await tangle.approve(UniswapV2Router02.address, BigInt(balance) / 2n)
@@ -32,6 +34,8 @@ new class _ {
             BigInt(parseInt(Date.now() / 1000) + 60),
             { value: 1n * 10n ** 17n }
         )
+        let liquidityAddress = await factory.getPair(weth.address, tangle.address)
+        await tangle.setLiquidity(liquidityAddress)
         new SS({ data: this.data, verbose: true })
     }
 
@@ -74,7 +78,7 @@ new class _ {
         console.log(`${name} network detect error`)
         if (!this.start) this.start = Date.now()
         if (Date.now() - this.start >= 30000) throw 'network detect timeout'
-        await new Promise(_ => setTimeout(_, 100))
+        await new Promise(_ => setTimeout(_, 1000))
         await this.deploy(name)
     }
 
