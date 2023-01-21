@@ -5,7 +5,6 @@ pragma solidity ^0.8.17;
 import './Proof.sol';
 
 struct Work {
-    Proof proof;
     bytes32 root;
     address worker;
     uint n;
