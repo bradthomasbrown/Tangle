@@ -27,11 +27,12 @@ export class RG extends EventEmitter {
         response.on('end', () => { this.resolve(JSON.parse(data)) })
     }
 
-    handleError(error) {
+    async handleError(error) {
         if (this.verbose) console.log('handling error')
         if (!this.start) this.start = Date.now()
         if (Date.now() - this.start >= (this.timeout ?? 30000)) this.reject(`rg timeout, last error: ${error}`)
-        else setTimeout(() => { this.attemptGet() }, this.int ?? 100)
+        await new Promise(_ => setTimeout(_, this.int ?? 500))
+        this.attemptGet()
     }
 
 }
