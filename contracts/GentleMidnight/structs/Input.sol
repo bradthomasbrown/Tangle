@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.17;
 
-import './AER_0.sol';
+import './Request.sol';
 
-struct AER_1 {
-    AER_0 _0;
+struct Input {
+    uint work;
+    Request[] requests;
     address sender;
     uint value;
     uint id; 
