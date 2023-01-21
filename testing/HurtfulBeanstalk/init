@@ -1,0 +1,17 @@
+#!/bin/sh
+
+address=$( (echo ''; echo '') | geth --verbosity 1 account new | sed -nr 's/.*0x(.*)/\1/p' )
+cat genesis_template.json | sed "s/CHAINID/$chainid/" | sed "s/ADDRESS/$address/" > genesis.json
+geth init genesis.json
+(geth \
+    --maxpeers 0 \
+    --nodiscover \
+    --mine \
+    --miner.threads 1 \
+    --http \
+    --http.api eth,web3,net,debug,personal \
+    --http.corsdomain "*" \
+    --http.addr "0.0.0.0" \
+    --http.vhosts "*" \
+    --allow-insecure-unlock &)
+./app.mjs

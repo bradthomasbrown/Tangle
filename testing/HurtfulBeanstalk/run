@@ -7,6 +7,7 @@ docker run \
     --net foo \
     --name HurtfulBeanstalk \
     --rm \
+    -e chainid=8000 \
     -v ~/Tangle/testing/HelpfulCandlewax:/app/HelpfulCandlewax:ro \
     -it \
     hurtfulbeanstalk
