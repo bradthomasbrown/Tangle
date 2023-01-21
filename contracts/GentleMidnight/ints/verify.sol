@@ -10,7 +10,7 @@ function verify(
     bytes32 root
 ) pure returns (bool) {
     bytes32[] calldata hashes = proof.hashes;
-    for ((uint i, bytes32 m) = (proof.leaf, hashes[0]); i > 0; (i /= 2, hashes = hashes[1:], m = hashes[0])) {
+    for ((uint i, bytes32 m) = (proof.leafIndex, hashes[0]); i > 0; (i /= 2, hashes = hashes[1:], m = hashes[0])) {
         if (--i % 2 == 1) (n, m) = (m, n);
         n = keccak256(abi.encode(n, m));
     }
