@@ -13,25 +13,40 @@ import '../ints/applyRefunds.sol';
 import '../ints/createNewInputs.sol';
 import '../ints/executeDirs.sol';
 import '../ints/markInputs.sol';
-import '../mods/auditInputs.sol';
+import '../mods/inputsOpen.sol';
+import '../mods/inputsVerified.sol';
 import '../mods/auditWorks.sol';
 import '../mods/outputsNotGreaterThanInputs.sol';
-import '../structs/Transaction.sol';
+import '../mods/oneRelevantStream.sol';
+import '../structs/IO.sol';
+import '../structs/Work.sol';
+import '../structs/Proof.sol';
+import '../structs/InputProof.sol';
 import '../vars/chunks.sol';
 import '../vars/ZippySoup.sol';
 
 contract hasExtExecute is
-hasModAuditInputs,
+hasModInputsOpen,
+hasModInputsVerified,
 hasModAuditWorks,
+hasModOneRelevantStream,
 hasModOutputsNotGreaterThanInputs,
 hasVarBalanceOf,
 hasVarChunks,
 hasVarGenerators,
 hasVarZippySoup
 {
-    function execute(Transaction calldata transaction) external
-    auditInputs(transaction.a2s, chunks, zs)
-    auditWorks(transaction.a2s, transaction.works)
+    function execute(
+        Stream[] calldata streams, 
+        Work[] calldata works, 
+        Proof[] workProofs, 
+        InputProof[] inputProofs
+    ) external
+    inputsOpen(streams, chunks)
+    inputsVerified(streams, inputProofs, zs)
+    oneRelevantStream(streams)
+    // TODO: break auditWorks into workchainIntact and worksSufficient
+    auditWorks(transaction.works)
     outputsNotGreaterThanInputs(transaction.a2s, transaction.dirs)
     {
         applyRefunds(transaction.a2s);
@@ -58,18 +73,14 @@ hasVarZippySoup
             }
         }
         AER_2[] calldata a2s = transaction.a2s;
-        uint gas;
         uint tax;
         for (uint i; i < a2s.length; i++) {
-            gas += a2s[i]._1._0.gas;
-            move(balanceOf, a2s[i]._1.sender, address(this), a2s[i]._1._0.gas);
             tax += a2s[i].refund / 20;
         }
         Dir[] calldata dirs = transaction.dirs;
         for (uint i; i < dirs.length; i++) {
             tax += dirs[i].value / 20;
         }
-        adjustGenerator(generators['tangle'], gas);
         adjustGenerator(generators['native'], tax);
     }
 
