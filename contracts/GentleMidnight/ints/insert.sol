@@ -8,13 +8,10 @@ import '../structs/AER_1.sol';
 
 function insert(
     ZippySoup storage zs,
-    AER_0 calldata a0,
-    address msgSender,
-    uint msgValue
+    Input memory input
 ) {
-    uint count = zs.count++;
-    uint r = ruler(count);
-    bytes32 h = keccak256(abi.encode(AER_1(a0, msgSender, msgValue, count)));
+    uint r = ruler(input.id);
+    bytes32 h = keccak256(abi.encode(input));
     for (uint i; i < r; i++) h = keccak256(abi.encode(zs.roots[i], h));
     zs.roots[r] = h;
 }
