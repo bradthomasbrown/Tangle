@@ -6,10 +6,12 @@ import './exts/adjustStake.sol';
 import './exts/airdrop.sol';
 import './exts/available.sol';
 import './exts/claim.sol';
+import './exts/points.sol';
 
 contract Farmable is
 hasExtAdjustStake,
 hasExtAirdrop,
 hasExtAvailable,
-hasExtClaim
+hasExtClaim,
+hasExtPoints
 {}
