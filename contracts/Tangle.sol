@@ -26,13 +26,13 @@ GentleMidnight
         balanceOf[msg.sender] += initSupply;
 
         // Farmable init
-        generators['tangle'].M = finalSupply - initSupply;
-        generators['tangle'].C = 14016000;
-        generators['tangle'].I = block.timestamp;
-        generators['tangle'].farms['airdrop'].N = 1;
-        generators['tangle'].farms['airdrop'].D = 10;
-        generators['tangle'].farms['stake'].N = 9;
-        generators['tangle'].farms['stake'].D = 10;
+        generator.M = finalSupply - initSupply;
+        generator.C = 14016000;
+        generator.I = block.timestamp;
+        generator.farms['airdrop'].N = 1;
+        generator.farms['airdrop'].D = 10;
+        generator.farms['stake'].N = 9;
+        generator.farms['stake'].D = 10;
 
         // Tangle init
         owner = msg.sender;
