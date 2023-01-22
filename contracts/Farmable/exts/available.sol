@@ -2,19 +2,22 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.17;
 
-import '../ints/foosToAvails.sol';
-import '../vars/generators.sol';
+import '../ints/available.sol';
+import '../vars/generator.sol';
 
 contract hasExtAvailable is
-hasVarGenerators
+hasVarGenerator
 {
 
-    function available(Foo[] calldata foos)
-    external view returns (uint[] memory avails)
+    function available(string[] calldata farmNames)
+    external view returns (uint[] memory foo)
     {
-        avails = new uint[](foos.length);
-        for (uint i; i < avails.length; i++)
-            avails[i] = foosToAvails(foos[i], generators, msg.sender);
+        foo = new uint[](farmNames.length);
+        for (uint i; i < foo.length; i++) {
+            Farm storage farm = generator.farms[farmNames[i]];
+            foo[i] = _available(generator, farm, farm.accounts[msg.sender]);
+        }
+            
     }
 
 }

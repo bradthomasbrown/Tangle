@@ -5,16 +5,18 @@ pragma solidity ^0.8.17;
 import '../../ERC20/vars/balanceOf.sol';
 
 import '../ints/claim.sol';
-import '../vars/generators.sol';
+import '../vars/generator.sol';
 
 contract hasExtClaim is
 hasVarBalanceOf,
-hasVarGenerators
+hasVarGenerator
 {
 
-    function claim(Foo[] calldata foos) external {
-        for (uint i; i < foos.length; i++)
-            _claim(address(this), balanceOf, generators, foos[i], msg.sender);
+    function claim(string[] calldata farmNames) external {
+        for (uint i; i < farmNames.length; i++) {
+            Farm storage farm = generator.farms[farmNames[i]];
+            _claim(address(this), balanceOf, generator, farm, farm.accounts[msg.sender]);
+        }
     }
 
 }

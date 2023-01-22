@@ -3,8 +3,8 @@ pragma solidity ^0.8.17;
 
 import '../structs/Generator.sol';
 
-contract hasVarGenerators {
+contract hasVarGenerator {
 
-    mapping(string => Generator) public generators;
+    Generator public generator;
 
 }

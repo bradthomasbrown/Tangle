@@ -7,18 +7,17 @@ import '../../ERC20/ints/move.sol';
 import '../../ERC20/vars/balanceOf.sol';
 
 import '../ints/adjustPoints.sol';
-import '../vars/generators.sol';
+import '../vars/generator.sol';
 
 contract hasExtAirdrop is
 hasEventTransfer,
 hasVarBalanceOf,
-hasVarGenerators
+hasVarGenerator
 {
 
     function airdrop(address[] calldata recipients)
     external
     {
-        Generator storage generator = generators['tangle'];
         Farm storage farm = generator.farms['airdrop'];
         Account storage account = farm.accounts[msg.sender];
         uint count;

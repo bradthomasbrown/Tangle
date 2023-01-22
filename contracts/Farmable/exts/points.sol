@@ -2,19 +2,20 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.17;
 
-import '../ints/foosToPoints.sol';
-import '../vars/generators.sol';
+import '../vars/generator.sol';
 
 contract hasExtPoints is
-hasVarGenerators
+hasVarGenerator
 {
 
-    function points(Foo[] calldata foos)
-    external view returns (uint[] memory points)
+    function points(string[] calldata farmNames)
+    external view returns (uint[] memory foo)
     {
-        points = new uint[](foos.length);
-        for (uint i; i < points.length; i++)
-            points[i] = foosToPoints(foos[i], generators, msg.sender);
+        foo = new uint[](farmNames.length);
+        for (uint i; i < farmNames.length; i++) {
+            Farm storage farm = generator.farms[farmNames[i]];
+            foo[i] = farm.accounts[msg.sender].P;
+        }
     }
 
 }

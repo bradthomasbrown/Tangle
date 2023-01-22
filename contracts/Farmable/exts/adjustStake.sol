@@ -3,16 +3,15 @@
 pragma solidity ^0.8.17;
 
 import '../ints/adjustPoints.sol';
-import '../vars/generators.sol';
+import '../vars/generator.sol';
 import '../vars/liquidity.sol';
 
 contract hasExtAdjustStake is
-hasVarGenerators,
+hasVarGenerator,
 hasVarLiquidity
 {
 
     function adjustStake(int amount) external {
-        Generator storage generator = generators['tangle'];
         Farm storage farm = generator.farms['stake'];
         Account storage account = farm.accounts[msg.sender];
         adjustPoints(generator, farm, account, amount);
