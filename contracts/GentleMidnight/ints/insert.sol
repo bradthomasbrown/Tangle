@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 
 import './ruler.sol';
 import '../structs/ZippySoup.sol';
-import '../structs/AER_1.sol';
+import '../structs/Input.sol';
 
 function insert(
     ZippySoup storage zs,

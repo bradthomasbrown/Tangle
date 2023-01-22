@@ -5,4 +5,5 @@ pragma solidity ^0.8.17;
 struct Proof {
     bytes32[] hashes;
     uint leafIndex;
+    uint ZSIndex;
 }

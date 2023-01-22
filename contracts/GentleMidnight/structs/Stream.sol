@@ -6,7 +6,7 @@ import './Input.sol';
 import './Output.sol';
 import './Rollover.sol';
 
-struct IO {
+struct Stream {
     Input[] inputs;
     Output[] outputs;
     Rollover[] rollovers;
