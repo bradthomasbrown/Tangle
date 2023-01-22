@@ -3,6 +3,8 @@
 pragma solidity ^0.8.17;
 
 import '../structs/Proof.sol';
+import '../structs/Input.sol';
+import '../structs/ZippySoup.sol';
 
 function verify(
     bytes32 n,
@@ -15,4 +17,12 @@ function verify(
         n = keccak256(abi.encode(n, m));
     }
     return n == root;
+}
+
+function verify(
+    Input calldata input,
+    Proof calldata proof,
+    ZippySoup storage zs
+) view returns (bool) {
+   return verify(keccak256(abi.encode(input)), proof, zs.roots[proof.ZSIndex]);
 }
