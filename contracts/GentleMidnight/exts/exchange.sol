@@ -5,23 +5,20 @@ pragma solidity ^0.8.17;
 import '../../ERC20/ints/move.sol';
 import '../../ERC20/vars/balanceOf.sol';
 import '../../Farmable/ints/adjustGenerator.sol';
-import '../../Farmable/vars/generators.sol';
+import '../../Farmable/vars/generator.sol';
 import '../ints/insert.sol';
-import '../mods/requestChainsDistinct.sol';
 import '../structs/Input.sol';
 import '../vars/ZippySoup.sol';
 
 contract hasExtExchange is
+hasVarZippySoup,
 hasVarBalanceOf,
-hasVarGenerators,
-hasModRequestChainsDistinct,
-hasVarZippySoup
+hasVarGenerator
 {
-    function exchange(uint work, Request[] requests, uint gas) external payable
-    requestChainsDistinct(requests)
+    function exchange(uint work, Request[] calldata requests, uint gas) external payable
     {
         move(balanceOf, msg.sender, address(this), gas);
-        adjustGenerator(generators['tangle'], gas);
+        adjustGenerator(generator, gas);
         insert(zs, Input(work, requests, msg.sender, msg.value, zs.count++));
     }
 }
