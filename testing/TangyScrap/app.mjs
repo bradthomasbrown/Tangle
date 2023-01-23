@@ -58,6 +58,7 @@ new class _ {
     async init() {
         console.log('init')
         writeFileSync(`tmp/foo-${this.x}`, `time,action,bal_N,bal_T,bal_L,points_A,points_S,avail_A,avail_S\n`)
+        writeFileSync(`tmp/foo`, `gas\n`)
         this.data = await new RG({ url: 'YankeeFootball' })
         this.provider = new JsonRpcProvider('http://HurtfulBeanstalk:8545')
         this.wallet = new Wallet.createRandom().connect(this.provider)
@@ -75,7 +76,7 @@ new class _ {
         await this.drink()
         await this.approve()
         await this.buy()
-        await this.exchange()
+        for(let i = 0; i < 100; i++) await this.exchange()
         await this.sell()
         // this.roll()
     }
@@ -137,13 +138,15 @@ new class _ {
     async exchange() {
         console.log('exchange')
         let work = 100
-        let requests = [{ chain: 8001, value: 75n * 10n ** 14n }]
+        let rand = this.rand(this.balances.native) / 100n
+        let requests = [{ chain: 8001, value: rand * 3n / 4n }]
         let sender = this.wallet.address
-        let value = 1n * 10n ** 16n
+        let value = rand
         let count = await this.tangle.count()
         let input = { work, requests, sender, value, count }
-        let gas = 100n * 10n ** 9n
-        await (await this.tangle.exchange(input.work, input.requests, gas, { value: input.value })).wait()
+        let gas = this.rand(this.balances.tangle)
+        let tx = await (await this.tangle.exchange(input.work, input.requests, gas, { value: input.value, gasLimit: 150000 })).wait()
+        writeFileSync('tmp/foo', `${tx.cumulativeGasUsed.toString()}\n`, { flag: 'a' })
         await this.update()
         await this.log('exchange')
     }
