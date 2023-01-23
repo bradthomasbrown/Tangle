@@ -54,4 +54,9 @@ GentleMidnight
         for (uint i; i < count; i++) _roots[i] = zs.roots[i];
     }
 
+    function _now() external view returns (uint)
+    {
+        return block.timestamp;
+    }
+
 }
