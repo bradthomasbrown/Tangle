@@ -8,15 +8,14 @@ import './available.sol';
 import './updateFarm.sol';
 
 function _claim(
-    address _this,
     mapping(address => uint) storage balanceOf,
     Generator storage generator,
     Farm storage farm,
-    Account storage account
+    Account storage account,
+    address msgSender
 ) {
     updateFarm(generator, farm);
-    uint R = _available(generator, farm, account);
-    move(balanceOf, _this, msg.sender, R);
+    balanceOf[msgSender] += _available(generator, farm, account);
     account.S = farm.S;
     account.R = 0;
 }
