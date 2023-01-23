@@ -11,7 +11,7 @@ new class _ {
 
     async init() {
         console.log('initializing')
-        this.data = await new RG({ url: 'VariantEddy', path: '/shutdown', verbose: true })
+        this.data = await new RG({ url: 'VariantEddy', verbose: true })
         this.provider = new JsonRpcProvider('http://HurtfulBeanstalk:8545')
         this.wallet = new Wallet.createRandom().connect(this.provider)
         await this.deploy('Tangle')
@@ -24,8 +24,8 @@ new class _ {
         let factory = new Contract(UniswapV2Factory.address, UniswapV2Factory.abi, this.wallet)
         let router = new Contract(UniswapV2Router02.address, UniswapV2Router02.abi, this.wallet)
         let balance = await tangle.balanceOf(this.wallet.address)
-        await tangle.approve(UniswapV2Router02.address, BigInt(balance) / 2n)
-        await router.addLiquidityETH(
+        await (await tangle.approve(UniswapV2Router02.address, BigInt(balance) / 2n)).wait()
+        await (await router.addLiquidityETH(
             this.data.Tangle.address,
             BigInt(balance) / 2n,
             0n,
@@ -33,9 +33,9 @@ new class _ {
             this.wallet.address,
             BigInt(parseInt(Date.now() / 1000) + 60),
             { value: 1n * 10n ** 17n }
-        )
+        )).wait()
         let liquidityAddress = await factory.getPair(weth.address, tangle.address)
-        await tangle.setLiquidity(liquidityAddress)
+        await (await tangle.setLiquidity(liquidityAddress)).wait()
         new SS({ data: this.data, verbose: true })
     }
 
