@@ -6,7 +6,7 @@ import { SS } from './HelpfulCandlewax/index.mjs'
 
 let conf = {
     Tangle: {
-        dir: 'Tangle/contracts',
+        dir: 'Tangle/contracts Tangle/compile',
         compilerPath: './Tangle/compile'
     },
     WETH9: {
