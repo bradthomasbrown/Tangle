@@ -14,8 +14,8 @@ GentleMidnight
     
     address public owner;
 
-    constructor() {
-
+    constructor()
+    {
         // ERC20 init
         name = "Tangle";
         symbol = "TNGL";
@@ -24,24 +24,34 @@ GentleMidnight
         uint initSupply = finalSupply / 10;
         totalSupply = initSupply;
         balanceOf[msg.sender] += initSupply;
-
         // Farmable init
         generator.M = finalSupply - initSupply;
         generator.C = 14016000;
-        generator.I = block.timestamp;
+        generator.T = block.timestamp;
         generator.farms['airdrop'].N = 1;
         generator.farms['airdrop'].D = 10;
         generator.farms['stake'].N = 9;
         generator.farms['stake'].D = 10;
-
         // Tangle init
         owner = msg.sender;
-
     }
 
-    function setLiquidity(address _liquidity) external {
+    function setLiquidity(address _liquidity) external
+    {
         require(msg.sender == owner);
         liquidity = ERC20(_liquidity);
+    }
+
+    function count() external view returns (uint)
+    {
+       return zs.count;
+    }
+
+    function roots() external view returns (bytes32[] memory _roots)
+    {
+        uint count = log2(zs.count) + 1;
+        _roots = new bytes32[](count);
+        for (uint i; i < count; i++) _roots[i] = zs.roots[i];
     }
 
 }
