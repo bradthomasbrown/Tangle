@@ -9,6 +9,5 @@ struct Generator {
     uint M;
     uint C;
     uint R;
-    uint I;
     uint T;
 }
