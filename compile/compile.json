@@ -6,7 +6,8 @@
     "settings": {
         "viaIR": true,
         "optimizer": {
-            "enabled": true
+            "enabled": true,
+            "runs": 65535
         },
         "remappings": [
             "@ERC20=/app/Tangle/contracts/ERC20",
