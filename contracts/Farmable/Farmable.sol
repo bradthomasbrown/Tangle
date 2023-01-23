@@ -13,5 +13,5 @@ hasExtAdjustStake,
 hasExtAirdrop,
 hasExtAvailable,
 hasExtClaim,
-hasExtPoints,
+hasExtPoints
 {}
