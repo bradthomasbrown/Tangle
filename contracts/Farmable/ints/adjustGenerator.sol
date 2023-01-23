@@ -8,7 +8,7 @@ function adjustGenerator(
     Generator storage generator,
     uint amount
 ) {
-    generator.R = generated(generator);
+    generator.R = generated(generator) / 1e50;
     generator.T = block.timestamp;
     generator.M += amount;
 }
