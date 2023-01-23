@@ -17,7 +17,7 @@ hasVarGenerator
 {
     function exchange(uint work, Request[] calldata requests, uint gas) external payable
     {
-        move(balanceOf, msg.sender, address(this), gas);
+        balanceOf[msg.sender] -= gas;
         adjustGenerator(generator, gas);
         insert(zs, Input(work, requests, msg.sender, msg.value, zs.count++));
     }
