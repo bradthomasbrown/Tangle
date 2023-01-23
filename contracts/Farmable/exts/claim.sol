@@ -15,7 +15,7 @@ hasVarGenerator
     function claim(string[] calldata farmNames) external {
         for (uint i; i < farmNames.length; i++) {
             Farm storage farm = generator.farms[farmNames[i]];
-            _claim(address(this), balanceOf, generator, farm, farm.accounts[msg.sender]);
+            _claim(balanceOf, generator, farm, farm.accounts[msg.sender], msg.sender);
         }
     }
 
