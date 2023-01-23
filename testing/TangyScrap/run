@@ -8,5 +8,6 @@ docker run \
     --name TangyScrap \
     --rm \
     -v ~/Tangle/testing/HelpfulCandlewax:/app/HelpfulCandlewax:ro \
+    -v ~/Tangle/testing/tmp:/app/tmp \
     -it \
     tangyscrap
