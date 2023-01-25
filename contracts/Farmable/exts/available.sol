@@ -10,8 +10,9 @@ hasVarGenerator
 {
 
     function available(string[] calldata farmNames)
-    external view returns (uint[] memory foo)
+    external view returns (uint[] memory foo, uint _now)
     {
+        _now = block.timestamp;
         foo = new uint[](farmNames.length);
         for (uint i; i < foo.length; i++) {
             Farm storage farm = generator.farms[farmNames[i]];
