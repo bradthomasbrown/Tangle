@@ -35,18 +35,18 @@ let ERC20Abi = [
     }
 ]
 
-// let weights = {
-//     buy: 1,
-//     sell: 1,
-//     airdrop: 1,
-//     claim: 0.01,
-//     exchange: 0.01,
-//     addLiquidity: 1,
-//     removeLiquidity: 1,
-//     adjustStake: 1
-// }
+let weights = {
+    buy: 2,
+    sell: 1,
+    airdrop: 1,
+    claim: 1,
+    exchange: 2,
+    addLiquidity: 1,
+    removeLiquidity: 1,
+    adjustStake: 1
+}
 
-// let foo = () => Object.entries(weights).reduce((p, c, _, a) => p - c[1] < 0 ? (a.splice(1), c[0]): p - c[1], Math.random() * Object.values(weights).reduce((p, c) => p + c))
+let foo = () => Object.entries(weights).reduce((p, c, _, a) => p - c[1] < 0 ? (a.splice(1), c[0]): p - c[1], Math.random() * Object.values(weights).reduce((p, c) => p + c))
 
 new class _ {
 
@@ -75,16 +75,14 @@ new class _ {
         await this.log('init')
         await this.drink()
         await this.approve()
-        await this.buy()
-        for(let i = 0; i < 100; i++) await this.exchange()
-        await this.sell()
-        // this.roll()
+        this.roll()
     }
 
-    // async roll() {
-    //     await this[foo()]()
-    //     setTimeout(_ => { this.roll() }, (Math.random() * 0.50 + 0.75) * this.x)
-    // }
+    async roll() {
+        if (this.balances.native < 10n ** 18n) await this.drink()
+        await this[foo()]()
+        setTimeout(_ => { this.roll() }, (Math.random() + 1) * 1000)
+    }
 
     async buy() {
         console.log('buy')
@@ -104,7 +102,7 @@ new class _ {
 
     async sell() {
         console.log('sell')
-        if (this.balances.tangle == 0) return
+        if (this.balances.tangle <= 0) return
         await (await this.router.swapExactTokensForETH(
             this.rand(this.balances.tangle),
             0,
@@ -130,6 +128,7 @@ new class _ {
 
     async claim() {
         console.log('claim')
+        if (this.points.stake <= 0 && this.points.airdrop <= 0) return
         await (await this.tangle.claim(['stake', 'airdrop']))
         await this.update()
         await this.log('claim')
@@ -137,6 +136,7 @@ new class _ {
 
     async exchange() {
         console.log('exchange')
+        if (this.balances.tangle <= 0 || this.balances.native <= 0) return
         let work = 100
         let rand = this.rand(this.balances.native) / 100n
         let requests = [{ chain: 8001, value: rand * 3n / 4n }]
@@ -238,8 +238,8 @@ new class _ {
         this.points.airdrop = points[0]
         this.points.stake = points[1]
         let available = await this.tangle.available(['airdrop', 'stake'])
-        this.available.airdrop = available[0]
-        this.available.stake = available[1]
+        this.available.airdrop = available[0][0]
+        this.available.stake = available[0][1]
     }
 
 }(1000)
