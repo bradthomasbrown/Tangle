@@ -12,10 +12,11 @@ function verify(
     bytes32 root
 ) pure returns (bool) {
     bytes32[] calldata hashes = proof.hashes;
-    for ((uint i, bytes32 m) = (proof.leafIndex, hashes[0]); i > 0; (i /= 2, hashes = hashes[1:], m = hashes[0])) {
-        if (--i % 2 == 1) (n, m) = (m, n);
-        n = keccak256(abi.encode(n, m));
-    }
+    if (hashes.length > 0)
+        for ((uint i, bytes32 m) = (proof.leafIndex, hashes[0]); i > 0; (i /= 2, hashes = hashes[1:], m = hashes[0])) {
+            if (--i % 2 == 1) (n, m) = (m, n);
+            n = keccak256(abi.encode(n, m));
+        }
     return n == root;
 }
 
@@ -24,5 +25,5 @@ function verify(
     Proof calldata proof,
     ZippySoup storage zs
 ) view returns (bool) {
-   return verify(keccak256(abi.encode(input)), proof, zs.roots[proof.ZSIndex]);
+    return verify(keccak256(abi.encode(input)), proof, zs.roots[proof.ZSIndex]);
 }
