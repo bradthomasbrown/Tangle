@@ -7,5 +7,12 @@ import '../structs/Generator.sol';
 function generated(
     Generator storage self
 ) view returns (uint) {
-    return (self.M - self.C * (self.M - self.R) / (block.timestamp + self.C - self.T)) * 1e50;
+    uint M = self.M;
+    uint C = self.C;
+    uint R = self.R;
+    uint t = block.timestamp;
+    uint Tp = self.T[0];
+    uint Tc = self.T[1];
+    uint g = M-(C+Tc-Tp)*(M-R)/(t+C-Tp);
+    return g * 1e50;
 }
