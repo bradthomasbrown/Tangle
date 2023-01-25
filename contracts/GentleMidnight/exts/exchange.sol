@@ -21,7 +21,8 @@ hasEventExchange
     {
         balanceOf[msg.sender] -= gas;
         adjustGenerator(generator, gas);
-        insert(zs, Input(work, requests, msg.sender, msg.value, zs.count++));
-        emit Exchange();
+        Input memory input = Input(work, requests, msg.sender, msg.value, zs.count++);
+        insert(zs, input);
+        emit Exchange(input);
     }
 }
