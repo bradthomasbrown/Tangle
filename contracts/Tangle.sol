@@ -27,11 +27,13 @@ GentleMidnight
         // Farmable init
         generator.M = finalSupply - initSupply;
         generator.C = 14016000;
-        generator.T = block.timestamp;
+        generator.T = [block.timestamp, block.timestamp];
         generator.farms['airdrop'].N = 1;
         generator.farms['airdrop'].D = 10;
-        generator.farms['stake'].N = 9;
+        generator.farms['stake'].N = 3;
         generator.farms['stake'].D = 10;
+        generator.farms['GentleMidnight'].N = 6;
+        generator.farms['GentleMidnight'].D = 10;
         // Tangle init
         owner = msg.sender;
     }
@@ -49,9 +51,9 @@ GentleMidnight
 
     function roots() external view returns (bytes32[] memory _roots)
     {
-        uint count = log2(zs.count) + 1;
-        _roots = new bytes32[](count);
-        for (uint i; i < count; i++) _roots[i] = zs.roots[i];
+        uint c = log2(zs.count) + 1;
+        _roots = new bytes32[](c);
+        for (uint i; i < c; i++) _roots[i] = zs.roots[i];
     }
 
     function _now() external view returns (uint)
