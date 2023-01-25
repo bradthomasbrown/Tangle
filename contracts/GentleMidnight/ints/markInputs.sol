@@ -8,5 +8,5 @@ function markInputs(
     Input[] calldata inputs,
     mapping(uint => uint) storage chunks
 ) {
-    for (uint i; i < inputs.length; i++) chunks[inputs[i].id / 256] &= 1 << inputs[i].id % 256;
+    for (uint i; i < inputs.length; i++) chunks[inputs[i].id / 256] |= 1 << inputs[i].id % 256;
 }
