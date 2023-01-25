@@ -13,6 +13,7 @@ import '../vars/ZippySoup.sol';
 import '../mods/workchainIntact.sol';
 import '../mods/workSufficient.sol';
 import '../mods/followsFirstLaw.sol';
+import '../mods/inputsDistinct.sol';
 import '../ints/processRollovers.sol';
 import '../ints/processOutputs.sol';
 import '../ints/markInputs.sol';
@@ -21,6 +22,7 @@ import '../ints/getExecutor.sol';
 contract hasExtExecute is
 hasVarChunks,
 hasModInputsOpen,
+hasModInputsDistinct,
 hasVarZippySoup,
 hasModInputsVerified,
 hasModWorkchainIntact,
@@ -35,6 +37,7 @@ hasVarGenerator
         Proof[] calldata inputProofs
     ) external
     inputsOpen(stos(streams).inputs, chunks)
+    inputsDistinct(stos(streams).inputs)
     inputsVerified(stos(streams).inputs, inputProofs, zs)
     workchainIntact(works, streams, workProofs)
     workSufficient(works, stos(streams).inputs)
