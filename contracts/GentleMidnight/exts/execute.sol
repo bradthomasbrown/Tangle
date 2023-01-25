@@ -41,18 +41,18 @@ hasVarGenerator
     followsFirstLaw(stos(streams).inputs, stos(streams).outputs, stos(streams).rollovers)
     {
         Stream calldata stream = stos(streams);
-        processRollovers(stream.rollovers, stream.inputs, zs);
-        processOutputs(stream.outputs);
-        markInputs(stream.inputs, chunks);
-        Farm storage farm = generator.farms['GentleMidnight'];
         Input[] calldata inputs = stream.inputs;
+        processRollovers(stream.rollovers, inputs, zs);
+        processOutputs(stream.outputs);
+        markInputs(inputs, chunks);
+        Farm storage farm = generator.farms['GentleMidnight'];
         for (uint i; i < works.length; i++) {
             address worker = works[i].worker;
-            adjustPoints(generator, farm, farm.accounts[worker], int(score(works, worker) * 1 / 4));
+            adjustPoints(generator, farm, farm.accounts[worker], int(score(works, worker)));
             payable(worker).transfer(sum(inputs) * 1 * 1 * score(works, worker) / score(works) / 20 / 4);
         }
         address executor = getExecutor(works, max(inputs));
-        adjustPoints(generator, farm, farm.accounts[executor], int(score(works) * 3 / 4));
+        adjustPoints(generator, farm, farm.accounts[executor], int(score(works) * 3));
         payable(executor).transfer(sum(inputs) * 3 * 1 / 20 / 4);
     }
 }
