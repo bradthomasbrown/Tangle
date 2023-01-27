@@ -1,0 +1,8 @@
+#!/bin/sh
+
+case $1 in
+tangle) echo --allow-paths=/app/contracts/Tangle,/app/contracts/ERC20,/app/contracts/Farmable,/app/contracts/GentleMidnight ;;
+weth) echo --allow-paths=/app/WETH ;;
+factory) echo --allow-paths=/app/v2-core/contracts ;;
+router) echo --allow-paths=/app/v2-periphery/contracts,/app/v2-core/contracts/interfaces,/app/solidity-lib/contracts/libraries ;;
+esac
