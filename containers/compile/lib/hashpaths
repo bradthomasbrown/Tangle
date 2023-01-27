@@ -1,0 +1,22 @@
+#!/bin/sh
+
+case $1 in
+tangle) echo \
+    /app/contracts/ERC20 \
+    /app/contracts/Farmable \
+    /app/contracts/GentleMidnight \
+    /app/contracts/Tangle \
+    json/tangle.json ;;
+weth) echo \
+    /app/WETH \
+    json/weth.json ;;
+factory) echo \
+    /app/v2-periphery \
+    /app/v2-core \
+    json/factory.json ;;
+router) echo \
+    /app/v2-periphery \
+    /app/v2-core \
+    /app/solidity-lib \
+    json/router.json ;;
+esac
