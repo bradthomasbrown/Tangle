@@ -1,0 +1,22 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "UniswapV2Router02": { "urls": ["/app/v2-periphery/contracts/UniswapV2Router02.sol"] }
+    },
+    "settings": {
+        "optimizer": {
+            "enabled": true
+        },
+        "remappings": [
+            "@uniswap/v2-core=/app/v2-core",
+            "@uniswap/lib=/app/solidity-lib",
+            "interfaces=/app/v2-periphery/contracts/interfaces",
+            "libraries=/app/v2-periphery/contracts/libraries"
+        ],
+        "outputSelection": {
+            "UniswapV2Router02": {
+                "UniswapV2Router02": [ "abi", "evm.bytecode.object" ]
+            }
+        }
+    }
+}
