@@ -1,0 +1,10 @@
+#!/bin/bash
+while true
+do
+    command=$(cat ~/Tangle/pipe)
+    echo $command
+    eval $command
+done
+
+# to run this in the background, persisting even if shell is terminated
+# nohup ./execpipe >/dev/null 2>&1
