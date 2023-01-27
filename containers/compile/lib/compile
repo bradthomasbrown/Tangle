@@ -1,0 +1,32 @@
+#!/bin/sh
+
+output='{}'
+
+for name in $@
+do
+
+    compiler=$(lib/compilers $name)
+    hpaths=$(lib/hashpaths $name)
+    apaths=$(lib/allowpaths $name)
+    hpath=/.cache/$name.hash
+    hcurr=$(lib/gethash $hpaths)
+    hprev=$(cat $hpath 2> /dev/null)
+    jpath=/.cache/$name.json
+
+    compile() {
+        cat json/$name.json | $compiler $apaths --standard-json > $jpath
+        echo $hcurr > $hpath
+    }
+
+    if [ ! -f $jpath ]
+    then
+        compile
+    else
+        if [ $hprev != $hcurr ]; then compile; fi
+    fi
+
+    output=$(cat $jpath | jq "$output + {"$name":({"bytecode":[..|.object? // empty][0]} + {"abi":[..|.abi? // empty][0]})}")
+
+done
+
+echo $output > test
