@@ -14,5 +14,6 @@ docker run \
     --rm \
     -v ~/Tangle/pipe:/app/containers/test/host \
     -v ~/Tangle/containers/test/pipe:/app/containers/test/pipe \
+    -v ~/Tangle/containers/chain/pipes:/app/containers/test/pipes \
     -it \
     test
