@@ -1,0 +1,8 @@
+#!/bin/sh
+
+case $1 in
+tangle) echo s817 ;;
+weth) echo s418 ;;
+factory) echo s516 ;;
+router) echo s606 ;;
+esac
