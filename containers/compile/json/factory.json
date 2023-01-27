@@ -1,0 +1,19 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "UniswapV2Factory": { "urls": ["/app/v2-core/contracts/UniswapV2Factory.sol"] },
+        "UniswapV2Pair.sol": { "urls": ["/app/v2-core/contracts/UniswapV2Pair.sol"] },
+        "UniswapV2ERC20.sol": { "urls": ["/app/v2-core/contracts/UniswapV2ERC20.sol"] }
+    },
+    "settings": {
+        "remappings": [
+            "interfaces=/app/v2-core/contracts/interfaces",
+            "libraries=/app/v2-core/contracts/libraries"
+        ],
+        "outputSelection": {
+            "UniswapV2Factory": {
+                "UniswapV2Factory": [ "abi", "evm.bytecode.object" ]
+            }
+        }
+    }
+}
