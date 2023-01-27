@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker build -t compile .
+docker build -t compile . > /dev/null 2>&1
 
 docker run \
     --init \
@@ -10,5 +10,5 @@ docker run \
     -v ~/.cache/Tangle:/.cache \
     -v ~/Tangle/contracts:/app/contracts:ro \
     -v ~/Tangle/containers/test/pipe:/app/containers/compile/test \
-    -it \
+    -d \
     compile
