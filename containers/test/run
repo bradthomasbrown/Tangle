@@ -1,0 +1,18 @@
+#!/bin/bash
+
+tar -cf - -C ~/Tangle \
+    classes \
+    functions \
+    interfaces \
+    containers/test | \
+docker build -t test -f containers/test/Dockerfile -
+
+docker run \
+    --init \
+    --net foo \
+    --name test \
+    --rm \
+    -v ~/Tangle/pipe:/app/containers/test/host \
+    -v ~/Tangle/containers/test/pipe:/app/containers/test/pipe \
+    -it \
+    test
