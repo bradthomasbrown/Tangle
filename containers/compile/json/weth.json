@@ -1,0 +1,13 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "WETH9": { "urls": ["/app/WETH/WETH9.sol"] }
+    },
+    "settings": {
+        "outputSelection": {
+            "WETH9": {
+                "WETH9": [ "abi", "evm.bytecode.object" ]
+            }
+        }
+    }
+}
