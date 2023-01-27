@@ -1,0 +1,12 @@
+#!/bin/bash
+
+docker build -t chain . > /dev/null 2>&1
+
+docker run \
+    --init \
+    --net foo \
+    --name $1 \
+    --rm \
+    -v ~/Tangle/containers/chain/pipes/$1:/app/pipe \
+    -ite chainid=$2 \
+    chain
