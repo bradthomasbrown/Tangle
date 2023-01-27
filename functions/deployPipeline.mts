@@ -6,5 +6,15 @@ export async function deployPipeline(this: Chain) {
     await this.deploy('tangle').catch(handleCatch)
     await this.deploy('weth').catch(handleCatch)
     await this.deploy('factory', AddressZero).catch(handleCatch)
-    await this.deploy('router', this.contracts['factory'].address, this.contracts['weth'].address).catch(handleCatch)
+    let { factory, weth } = this.contracts
+    await this.deploy('router', factory.address, weth.address).catch(handleCatch)
+    let { router, tangle } = this.contracts
+
+    // TODO: GETFUNDS()
+    // either clever pipe trick or geth remote sendTransactions
+
+    // router.addLiquidityETH(...args)
+    // let liquidity = await factory.getPair(tangle.address, weth.address)
+    // await tangle.setLiquidity(liquidity)
+
 }
