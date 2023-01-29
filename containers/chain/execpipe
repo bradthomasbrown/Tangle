@@ -2,9 +2,9 @@
 
 while true
 do
-    address=$(cat ./pipe)
-    geth --exec 'personal.unlockAccount(eth.coinbase, "", 0)' attach http://localhost:8545
-    geth --exec "eth.sendTransaction({ from: eth.coinbase, to: '$address', value: '1000000000000000000' })" attach http://localhost:8545
+    set -- $(cat ./pipe)
+    geth --exec 'personal.unlockAccount(eth.coinbase, "", 0)' attach http://localhost:8545 > /dev/null 2&>1
+    geth --exec "eth.sendTransaction({ from: eth.coinbase, to: '$1', value: '$2' })" attach http://localhost:8545 | tr -d '"\n' > ./pipe
 done
 
 # to run this in the background, persisting even if shell is terminated
