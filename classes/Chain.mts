@@ -1,32 +1,29 @@
 import { writeFile } from 'fs/promises'
-import { Contract, ContractFactory, Wallet } from 'ethers'
+import { Contract, Wallet } from 'ethers'
 import { JsonRpcProvider } from '@ethersproject/providers'
-import { deployPipeline, handleCatch } from '../functions/index.mjs'
+import { deployPipeline } from '../functions/index.mjs'
 import { Compiled } from '../interfaces/Compiled.mjs'
+import { Network } from '@ethersproject/networks'
 
 export class Chain {
 
-    contracts: { [key: string]: Contract }
+    chainid: number
     compiled: Promise<Compiled>
     provider: JsonRpcProvider
     wallet: Wallet
+    ready: Promise<Network>
+    contracts: { [key: string]: Contract }
+    deployed: Promise<void>
     
     constructor(chainid: number, compiled: Promise<Compiled>) {
-        this.compiled = compiled
+        Object.assign(this, { chainid, compiled })
         let name = `chain${chainid}`
         writeFile('host', `(cd containers/chain; mkfifo pipes/${name}; ./run ${name} ${chainid} &);`)
         this.provider = new JsonRpcProvider(`http://${name}:8545`)
         this.wallet = Wallet.createRandom().connect(this.provider)
+        this.ready = this.provider.ready
         this.contracts = {}
-    }
-
-    async deploy(name?: string, ...args: any[]): Promise<void> {
-        // if (!name) return deployPipeline.bind(this)()
-        // await this.provider.ready
-        // let compiled = await this.compiled.catch(handleCatch)
-        // let { abi, bytecode } = compiled[name]
-        // let factory = new ContractFactory(abi, bytecode, this.wallet)
-        // this.contracts[name] = await factory.deploy(...args, { gasPrice: 0 }).catch(handleCatch)
+        this.deployed = deployPipeline.bind(this)()
     }
 
 }
