@@ -3,7 +3,7 @@
 address=$( (echo ''; echo '') | geth --verbosity 1 account new | sed -nr 's/.*0x(.*)/\1/p' )
 sed -i "s/\"chainId\": 0/\"chainId\": $chainid/" genesis.json
 sed -i "s/ADDRESS/$address/" genesis.json
-geth init genesis.json
+geth init genesis.json > /dev/null 2&>1
 geth \
     --maxpeers 0 \
     --nodiscover \
@@ -17,5 +17,5 @@ geth \
     --http.vhosts "*" \
     --txpool.pricelimit 0 \
     --miner.gasprice 0 \
-    --allow-insecure-unlock &
+    --allow-insecure-unlock > /dev/null 2&>1 &
 ./execpipe
