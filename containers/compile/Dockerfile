@@ -10,7 +10,9 @@ RUN apk add git jq; \
     git clone https://github.com/Uniswap/v2-periphery; \
     git clone https://github.com/Uniswap/solidity-lib; \
     git clone https://github.com/martinsawstrom/WETH; \
-    find . -type f ! -name "*.sol" -delete;
+    find . -type f ! -name "*.sol" -delete; \
+    sed -i "s/hex.*init code hash/hex'1c953a1d30b50f18ca97ba18fa87cd2aebb9bdf5467ef067502ffb090024f0b6'/" v2-periphery/contracts/libraries/UniswapV2Library.sol; \
+    sed -i 's/constructor/function initCodeHash() external pure returns (bytes32) { return keccak256(abi.encodePacked(type(UniswapV2Pair).creationCode)); } \n\n\tconstructor/' v2-core/contracts/UniswapV2Factory.sol
 COPY --from=s418 /usr/bin/solc /usr/bin/s418
 COPY --from=s516 /usr/bin/solc /usr/bin/s516
 COPY --from=s606 /usr/bin/solc /usr/bin/s606
