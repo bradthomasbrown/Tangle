@@ -8,5 +8,5 @@ docker run \
     --name $1 \
     --rm \
     -v ~/Tangle/containers/chain/pipes/$1:/app/pipe \
-    -ite chainid=$2 \
+    -de chainid=$2 \
     chain
