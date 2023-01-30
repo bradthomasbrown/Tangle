@@ -6,16 +6,17 @@ import '../ERC20/ERC20.sol';
 import '../Farmable/Farmable.sol';
 import '../GentleMidnight/GentleMidnight.sol';
 import './vars/MinBal.sol';
+import './vars/airdropAmount.sol';
+import './vars/owner.sol';
 
 contract Tangle is
 ERC20,
 Farmable,
 GentleMidnight,
 hasVarMinBal,
-hasVarAirdropAmount
+hasVarAirdropAmount,
+hasVarOwner
 {
-    
-    address public owner;
 
     constructor()
     {
@@ -23,11 +24,10 @@ hasVarAirdropAmount
         name = "Tangle";
         symbol = "TNGL";
         decimals = 9;
-        uint finalSupply = 1e9 * 10 ** decimals;
-        uint initSupply = finalSupply / 10;
-        totalSupply = initSupply;
+        totalSupply = 1e9 * 10 ** decimals;
+        uint initSupply = totalSupply / 10;
         move(address(this), address(liquidity), balanceOf, generator, minBal, [address(0), msg.sender], initSupply);
-        move(address(this), address(liquidity), balanceOf, generator, minBal, [address(0), address(this)], finalSupply - initSupply);
+        move(address(this), address(liquidity), balanceOf, generator, minBal, [address(0), address(this)], totalSupply - initSupply);
         // Farmable init
         generator.M = finalSupply - initSupply;
         generator.C = 14016000;
@@ -78,5 +78,7 @@ hasVarAirdropAmount
     {
         return block.timestamp;
     }
+
+    function update() external payable {}
 
 }
