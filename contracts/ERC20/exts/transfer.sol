@@ -5,14 +5,20 @@ pragma solidity ^0.8.17;
 import '../events/Transfer.sol';
 import '../ints/move.sol';
 import '../vars/balanceOf.sol';
+import '../../Farmable/vars/generator.sol';
+import '../../Farmable/vars/liquidity.sol';
+import '../../Tangle/vars/minBal.sol';
 
 contract hasExtTransfer is
 hasEventTransfer,
-hasVarBalanceOf
+hasVarBalanceOf,
+hasVarGenerator,
+hasVarLiquidity,
+hasVarMinBal
 {
 
     function transfer(address to, uint value) external {
-        move(balanceOf, msg.sender, to, value);
+        move(address(this), address(liquidity), balanceOf, generator, minBal, [msg.sender, to], value);
         emit Transfer(msg.sender, to, value);
     }
 

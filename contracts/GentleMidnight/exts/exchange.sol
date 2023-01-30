@@ -19,8 +19,7 @@ hasEventExchange
 {
     function exchange(uint work, Request[] calldata requests, uint gas) external payable
     {
-        balanceOf[msg.sender] -= gas;
-        adjustGenerator(generator, gas);
+        move(address(this), address(liquidity), balanceOf, generator, minBal, [msg.sender, address(this)], gas);
         Input memory input = Input(work, requests, msg.sender, msg.value, adisa.count++);
         insert(adisa, input);
         emit Exchange(input);
