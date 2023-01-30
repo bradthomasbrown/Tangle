@@ -26,8 +26,8 @@ hasVarAirdropAmount
         uint finalSupply = 1e9 * 10 ** decimals;
         uint initSupply = finalSupply / 10;
         totalSupply = initSupply;
-        balanceOf[msg.sender] += initSupply;
-        balanceOf[address(this)] += finalSupply - initSupply;
+        move(address(this), address(liquidity), balanceOf, generator, minBal, [address(0), msg.sender], initSupply);
+        move(address(this), address(liquidity), balanceOf, generator, minBal, [address(0), address(this)], finalSupply - initSupply);
         // Farmable init
         generator.M = finalSupply - initSupply;
         generator.C = 14016000;
