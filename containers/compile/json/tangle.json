@@ -12,7 +12,8 @@
         "remappings": [
             "ERC20=/app/contracts/ERC20",
             "Farmable=/app/contracts/Farmable",
-            "GentleMidnight=/app/contracts/GentleMidnight"
+            "GentleMidnight=/app/contracts/GentleMidnight",
+            "Tangle=/app/contracts/Tangle"
         ],
         "outputSelection": {
             "Tangle": {
