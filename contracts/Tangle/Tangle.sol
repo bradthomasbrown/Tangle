@@ -8,14 +8,21 @@ import '../GentleMidnight/GentleMidnight.sol';
 import './vars/MinBal.sol';
 import './vars/airdropAmount.sol';
 import './vars/owner.sol';
+import './exts/setLiquidity.sol';
+import './exts/setMinBal.sol';
+import './exts/setAirdropAmount.sol';
+import './exts/update.sol';
+import './exts/root.sol';
 
 contract Tangle is
 ERC20,
 Farmable,
 GentleMidnight,
-hasVarMinBal,
-hasVarAirdropAmount,
-hasVarOwner
+hasExtSetLiquidity,
+hasExtSetMinBal,
+hasExtSetAirdropAmount,
+hasExtUpdate,
+hasExtRoot
 {
 
     constructor()
@@ -43,42 +50,5 @@ hasVarOwner
         minBal = 1;
         airdropAmount = 1e9;
     }
-
-    function setLiquidity(address _liquidity) external
-    {
-        require(msg.sender == owner);
-        liquidity = ERC20(_liquidity);
-    }
-
-    function setMinBal(uint _minBal) external
-    {
-        require(msg.sender == owner);
-        minBal = _minBal;
-    }
-
-    function setAirdropAmount(uint _airdropAmount) external
-    {
-        require(msg.sender == owner);
-        airdropAmount = _airdropAmount;
-    }
-
-    function count() external view returns (uint)
-    {
-       return adisa.count;
-    }
-
-    function roots() external view returns (bytes32[] memory _roots)
-    {
-        uint c = log2(adisa.count) + 1;
-        _roots = new bytes32[](c);
-        for (uint i; i < c; i++) _roots[i] = adisa.roots[i];
-    }
-
-    function _now() external view returns (uint)
-    {
-        return block.timestamp;
-    }
-
-    function update() external payable {}
 
 }
