@@ -7,6 +7,8 @@ import '../../ERC20/ints/move.sol';
 import '../../ERC20/vars/balanceOf.sol';
 import '../../Farmable/ints/adjustGenerator.sol';
 import '../../Farmable/vars/generator.sol';
+import '../../Farmable/vars/liquidity.sol';
+import '../../Tangle/vars/minBal.sol';
 import '../ints/insert.sol';
 import '../structs/Input.sol';
 import '../vars/ADISA.sol';
@@ -15,7 +17,9 @@ contract hasExtExchange is
 hasVarADISA,
 hasVarBalanceOf,
 hasVarGenerator,
-hasEventExchange
+hasEventExchange,
+hasVarLiquidity,
+hasVarMinBal
 {
     function exchange(uint work, Request[] calldata requests, uint gas) external payable
     {
