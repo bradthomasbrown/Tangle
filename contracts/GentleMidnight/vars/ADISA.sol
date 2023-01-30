@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.17;
 
-import '../structs/ZippySoup.sol';
+import '../structs/ADISA.sol';
 
-contract hasVarZippySoup {
+contract hasVarADISA {
 
-    ZippySoup public zs;
+    ADISA public adisa;
 
 }

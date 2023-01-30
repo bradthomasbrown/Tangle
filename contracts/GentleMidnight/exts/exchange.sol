@@ -9,10 +9,10 @@ import '../../Farmable/ints/adjustGenerator.sol';
 import '../../Farmable/vars/generator.sol';
 import '../ints/insert.sol';
 import '../structs/Input.sol';
-import '../vars/ZippySoup.sol';
+import '../vars/ADISA.sol';
 
 contract hasExtExchange is
-hasVarZippySoup,
+hasVarADISA,
 hasVarBalanceOf,
 hasVarGenerator,
 hasEventExchange
@@ -21,8 +21,8 @@ hasEventExchange
     {
         balanceOf[msg.sender] -= gas;
         adjustGenerator(generator, gas);
-        Input memory input = Input(work, requests, msg.sender, msg.value, zs.count++);
-        insert(zs, input);
+        Input memory input = Input(work, requests, msg.sender, msg.value, adisa.count++);
+        insert(adisa, input);
         emit Exchange(input);
     }
 }

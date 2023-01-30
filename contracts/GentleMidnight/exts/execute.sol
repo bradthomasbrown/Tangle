@@ -9,7 +9,7 @@ import '../ints/stos.sol';
 import '../mods/inputsOpen.sol';
 import '../vars/chunks.sol';
 import '../mods/inputsVerified.sol';
-import '../vars/ZippySoup.sol';
+import '../vars/ADISA.sol';
 import '../mods/workchainIntact.sol';
 import '../mods/workSufficient.sol';
 import '../mods/followsFirstLaw.sol';
@@ -23,7 +23,7 @@ contract hasExtExecute is
 hasVarChunks,
 hasModInputsOpen,
 hasModInputsDistinct,
-hasVarZippySoup,
+hasVarADISA,
 hasModInputsVerified,
 hasModWorkchainIntact,
 hasModWorkSufficient,
@@ -38,14 +38,14 @@ hasVarGenerator
     ) external
     inputsOpen(stos(streams).inputs, chunks)
     inputsDistinct(stos(streams).inputs)
-    inputsVerified(stos(streams).inputs, inputProofs, zs)
+    inputsVerified(stos(streams).inputs, inputProofs, adisa)
     workchainIntact(works, streams, workProofs)
     workSufficient(works, stos(streams).inputs)
     followsFirstLaw(stos(streams).inputs, stos(streams).outputs, stos(streams).rollovers)
     {
         Stream calldata stream = stos(streams);
         Input[] calldata inputs = stream.inputs;
-        processRollovers(stream.rollovers, inputs, zs);
+        processRollovers(stream.rollovers, inputs, adisa);
         processOutputs(stream.outputs);
         markInputs(inputs, chunks);
         Farm storage farm = generator.farms['GentleMidnight'];

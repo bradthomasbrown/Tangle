@@ -3,16 +3,16 @@
 pragma solidity ^0.8.17;
 
 import '../ints/verify.sol';
-import '../structs/ZippySoup.sol';
+import '../structs/ADISA.sol';
 
 contract hasModInputsVerified {
 
     modifier inputsVerified (
         Input[] calldata inputs,
         Proof[] calldata proofs,
-        ZippySoup storage zs
+        ADISA storage adisa
     ) {
-        for (uint i; i < inputs.length; i++) require(verify(inputs[i], proofs[i], zs), 'input unverified');
+        for (uint i; i < inputs.length; i++) require(verify(inputs[i], proofs[i], adisa), 'input unverified');
         _;
     }
 

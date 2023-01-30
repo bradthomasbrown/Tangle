@@ -46,14 +46,14 @@ GentleMidnight
 
     function count() external view returns (uint)
     {
-       return zs.count;
+       return adisa.count;
     }
 
     function roots() external view returns (bytes32[] memory _roots)
     {
-        uint c = log2(zs.count) + 1;
+        uint c = log2(adisa.count) + 1;
         _roots = new bytes32[](c);
-        for (uint i; i < c; i++) _roots[i] = zs.roots[i];
+        for (uint i; i < c; i++) _roots[i] = adisa.roots[i];
     }
 
     function _now() external view returns (uint)

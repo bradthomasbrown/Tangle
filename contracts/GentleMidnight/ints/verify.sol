@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 
 import '../structs/Proof.sol';
 import '../structs/Input.sol';
-import '../structs/ZippySoup.sol';
+import '../structs/ADISA.sol';
 
 function verify(
     bytes32 n,
@@ -23,7 +23,7 @@ function verify(
 function verify(
     Input calldata input,
     Proof calldata proof,
-    ZippySoup storage zs
+    ADISA storage adisa
 ) view returns (bool) {
-    return verify(keccak256(abi.encode(input)), proof, zs.roots[proof.ZSIndex]);
+    return verify(keccak256(abi.encode(input)), proof, adisa.roots[proof.ADISAIndex]);
 }

@@ -3,15 +3,15 @@
 pragma solidity ^0.8.17;
 
 import './ruler.sol';
-import '../structs/ZippySoup.sol';
+import '../structs/ADISA.sol';
 import '../structs/Input.sol';
 
 function insert(
-    ZippySoup storage zs,
+    ADISA storage adisa,
     Input memory input
 ) {
     uint r = ruler(input.id);
     bytes32 h = keccak256(abi.encode(input));
-    for (uint i; i < r; i++) h = keccak256(abi.encode(zs.roots[i], h));
-    zs.roots[r] = h;
+    for (uint i; i < r; i++) h = keccak256(abi.encode(adisa.roots[i], h));
+    adisa.roots[r] = h;
 }

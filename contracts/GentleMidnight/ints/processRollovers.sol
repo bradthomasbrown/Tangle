@@ -9,7 +9,7 @@ import '../ints/insert.sol';
 function processRollovers(
     Rollover[] calldata rollovers,
     Input[] calldata inputs,
-    ZippySoup storage zs
+    ADISA storage adisa
 ) {
     for (uint i; i < rollovers.length; i++) {
         Rollover calldata rollover = rollovers[i];
@@ -22,6 +22,6 @@ function processRollovers(
             Request calldata request = input.requests[reqMod.index];
             requests[j] = Request(request.chain, request.value - reqMod.subtrahend);
         }
-        insert(zs, Input(input.work, requests, input.sender, input.value - inMod.subtrahend, zs.count++));
+        insert(adisa, Input(input.work, requests, input.sender, input.value - inMod.subtrahend, adisa.count++));
     }
 }
