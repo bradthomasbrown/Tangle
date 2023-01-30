@@ -20,7 +20,7 @@ function move(
         for (uint i = 0; i < 2; i++)
             if (path[i] != liquidity && path[i] != _this && path[i] != address(0))
                 adjustPoints(generator, farm, farm.accounts[path[i]], (2 * int(i) - 1) * int(value));
-    balances[path[0]] -= value;
+    if (path[0] != address(0)) balances[path[0]] -= value;
     balances[path[1]] += value;
     if (path[1] == _this) adjustGenerator(generator, value);
 }
