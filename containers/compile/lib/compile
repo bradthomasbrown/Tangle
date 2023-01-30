@@ -14,7 +14,8 @@ do
     jpath=/.cache/$name.json
 
     compile() {
-        cat json/$name.json | $compiler $apaths --standard-json > $jpath
+        result=$(cat json/$name.json | $compiler $apaths --standard-json)
+        echo $result > $jpath
         echo $hcurr > $hpath
     }
 
