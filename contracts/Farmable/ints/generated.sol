@@ -14,5 +14,5 @@ function generated(
     uint Tp = self.T[0];
     uint Tc = self.T[1];
     uint g = M-(C+Tc-Tp)*(M-R)/(t+C-Tp);
-    return g * 1e50;
+    return g * self.S;
 }

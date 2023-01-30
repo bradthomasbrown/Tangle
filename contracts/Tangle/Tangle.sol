@@ -5,11 +5,14 @@ pragma solidity ^0.8.17;
 import '../ERC20/ERC20.sol';
 import '../Farmable/Farmable.sol';
 import '../GentleMidnight/GentleMidnight.sol';
+import './vars/MinBal.sol';
 
 contract Tangle is
 ERC20,
 Farmable,
-GentleMidnight
+GentleMidnight,
+hasVarMinBal,
+hasVarAirdropAmount
 {
     
     address public owner;
@@ -24,24 +27,39 @@ GentleMidnight
         uint initSupply = finalSupply / 10;
         totalSupply = initSupply;
         balanceOf[msg.sender] += initSupply;
+        balanceOf[address(this)] += finalSupply - initSupply;
         // Farmable init
         generator.M = finalSupply - initSupply;
         generator.C = 14016000;
         generator.T = [block.timestamp, block.timestamp];
-        generator.farms['airdrop'].N = 1;
-        generator.farms['airdrop'].D = 10;
-        generator.farms['stake'].N = 3;
-        generator.farms['stake'].D = 10;
-        generator.farms['GentleMidnight'].N = 6;
-        generator.farms['GentleMidnight'].D = 10;
+        generator.farms['hold'].N = 16;
+        generator.farms['airdrop'].N = 16;
+        generator.farms['stake'].N = 16;
+        generator.farms['GentleMidnight'].N = 52;
+        generator.D = 100;
+        generator.S = 1e32;
         // Tangle init
         owner = msg.sender;
+        minBal = 1;
+        airdropAmount = 1e9;
     }
 
     function setLiquidity(address _liquidity) external
     {
         require(msg.sender == owner);
         liquidity = ERC20(_liquidity);
+    }
+
+    function setMinBal(uint _minBal) external
+    {
+        require(msg.sender == owner);
+        minBal = _minBal;
+    }
+
+    function setAirdropAmount(uint _airdropAmount) external
+    {
+        require(msg.sender == owner);
+        airdropAmount = _airdropAmount;
     }
 
     function count() external view returns (uint)

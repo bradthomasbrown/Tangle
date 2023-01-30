@@ -10,4 +10,6 @@ struct Generator {
     uint C;
     uint R;
     uint[2] T;
+    uint D;
+    uint S;
 }

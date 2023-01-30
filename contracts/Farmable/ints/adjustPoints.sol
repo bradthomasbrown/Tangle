@@ -12,7 +12,7 @@ function adjustPoints(
     int amount
 ) {
     updateFarm(generator, farm);
-    updateAccount(farm, account);
+    updateAccount(generator, farm, account);
     farm.P = uint(int(farm.P) + amount);
     account.P = uint(int(account.P) + amount);
 }
