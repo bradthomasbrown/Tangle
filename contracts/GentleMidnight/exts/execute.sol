@@ -3,6 +3,8 @@
 pragma solidity ^0.8.17;
 
 import '../../Farmable/ints/adjustPoints.sol';
+import '../../Farmable/vars/accounts.sol';
+import '../../Farmable/vars/farms.sol';
 import '../../Farmable/vars/generator.sol';
 
 import '../ints/stos.sol';
@@ -20,15 +22,17 @@ import '../ints/markInputs.sol';
 import '../ints/getExecutor.sol';
 
 contract hasExtExecute is
-hasVarChunks,
 hasModInputsOpen,
 hasModInputsDistinct,
-hasVarADISA,
 hasModInputsVerified,
 hasModWorkchainIntact,
 hasModWorkSufficient,
 hasModFollowsFirstLaw,
-hasVarGenerator
+hasVarAccounts,
+hasVarFarms,
+hasVarGenerator,
+hasVarADISA,
+hasVarChunks
 {
     function execute(
         Stream[] calldata streams, 
@@ -48,14 +52,14 @@ hasVarGenerator
         processRollovers(stream.rollovers, inputs, adisa);
         processOutputs(stream.outputs);
         markInputs(inputs, chunks);
-        Farm storage farm = generator.farms['GentleMidnight'];
+        Farm storage farm = farms['GentleMidnight'];
         for (uint i; i < works.length; i++) {
             address worker = works[i].worker;
-            adjustPoints(generator, farm, farm.accounts[worker], int(score(works, worker)));
+            adjustPoints(generator, farm, accounts['GentleMidnight'][worker], int(score(works, worker)));
             payable(worker).transfer(sum(inputs) * 1 * 1 * score(works, worker) / score(works) / 20 / 4);
         }
         address executor = getExecutor(works, max(inputs));
-        adjustPoints(generator, farm, farm.accounts[executor], int(score(works) * 3));
+        adjustPoints(generator, farm, accounts['GentleMidnight'][executor], int(score(works) * 3));
         payable(executor).transfer(sum(inputs) * 3 * 1 / 20 / 4);
     }
 }

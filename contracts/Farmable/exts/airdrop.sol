@@ -5,9 +5,12 @@ pragma solidity ^0.8.17;
 import '../../ERC20/events/Transfer.sol';
 import '../../ERC20/ints/move.sol';
 import '../../ERC20/vars/balanceOf.sol';
+import '../../Farmable/vars/accounts.sol';
+import '../../Farmable/vars/farms.sol';
 import '../../Farmable/vars/liquidity.sol';
 import '../../Tangle/vars/minBal.sol';
 import '../../Tangle/vars/airdropAmount.sol';
+import '../../Tangle/vars/owner.sol';
 
 import '../ints/adjustPoints.sol';
 import '../vars/generator.sol';
@@ -15,22 +18,23 @@ import '../vars/generator.sol';
 contract hasExtAirdrop is
 hasEventTransfer,
 hasVarBalanceOf,
+hasVarAccounts,
+hasVarFarms,
 hasVarGenerator,
 hasVarLiquidity,
+hasVarAirdropAmount,
 hasVarMinBal,
-hasVarAirdropAmount
+hasVarOwner
 {
 
     function airdrop(address[] calldata recipients)
     external
     {
-        Farm storage farm = generator.farms['airdrop'];
-        Account storage account = farm.accounts[msg.sender];
         for (uint i = 0; i < recipients.length; i++) {
             address recipient = recipients[i];
             if (balanceOf[recipient] != 0) continue;
-            adjustPoints(generator, farm, account, 1);
-            move(address(this), address(liquidity), balanceOf, generator, minBal, [msg.sender, recipient], airdropAmount);
+            adjustPoints(generator, farms['airdrop'], accounts['airdrop'][msg.sender], 1);
+            move(address(this), balanceOf, generator, farms, accounts, minBal, [msg.sender, recipient], airdropAmount);
         }
     }
 

@@ -6,24 +6,30 @@ import '../events/Exchange.sol';
 import '../../ERC20/ints/move.sol';
 import '../../ERC20/vars/balanceOf.sol';
 import '../../Farmable/ints/adjustGenerator.sol';
+import '../../Farmable/vars/accounts.sol';
+import '../../Farmable/vars/farms.sol';
 import '../../Farmable/vars/generator.sol';
 import '../../Farmable/vars/liquidity.sol';
 import '../../Tangle/vars/minBal.sol';
+import '../../Tangle/vars/owner.sol';
 import '../ints/insert.sol';
 import '../structs/Input.sol';
 import '../vars/ADISA.sol';
 
 contract hasExtExchange is
-hasVarADISA,
-hasVarBalanceOf,
-hasVarGenerator,
 hasEventExchange,
+hasVarBalanceOf,
+hasVarAccounts,
+hasVarFarms,
+hasVarGenerator,
 hasVarLiquidity,
-hasVarMinBal
+hasVarADISA,
+hasVarMinBal,
+hasVarOwner
 {
     function exchange(uint work, Request[] calldata requests, uint gas) external payable
     {
-        move(address(this), address(liquidity), balanceOf, generator, minBal, [msg.sender, address(this)], gas);
+        move(address(this), balanceOf, generator, farms, accounts, minBal, [msg.sender, address(this)], gas);
         Input memory input = Input(work, requests, msg.sender, msg.value, adisa.count++);
         insert(adisa, input);
         emit Exchange(input);

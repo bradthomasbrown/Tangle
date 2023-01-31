@@ -10,9 +10,9 @@ function generated(
     uint M = self.M;
     uint C = self.C;
     uint R = self.R;
+    uint Tp = self.Tp;
+    uint Tc = self.Tc;
     uint t = block.timestamp;
-    uint Tp = self.T[0];
-    uint Tc = self.T[1];
     uint g = M-(C+Tc-Tp)*(M-R)/(t+C-Tp);
     return g * self.S;
 }

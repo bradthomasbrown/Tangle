@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.17;
 
+import '../structs/Account.sol';
+import '../structs/Farm.sol';
 import '../structs/Generator.sol';
 
 function updateAccount(

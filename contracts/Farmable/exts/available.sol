@@ -3,9 +3,13 @@
 pragma solidity ^0.8.17;
 
 import '../ints/available.sol';
+import '../vars/accounts.sol';
+import '../vars/farms.sol';
 import '../vars/generator.sol';
 
 contract hasExtAvailable is
+hasVarAccounts,
+hasVarFarms,
 hasVarGenerator
 {
 
@@ -14,11 +18,8 @@ hasVarGenerator
     {
         _now = block.timestamp;
         foo = new uint[](farmNames.length);
-        for (uint i; i < foo.length; i++) {
-            Farm storage farm = generator.farms[farmNames[i]];
-            foo[i] = _available(generator, farm, farm.accounts[msg.sender]);
-        }
-            
+        for (uint i; i < foo.length; i++) 
+            foo[i] = _available(generator, farms[farmNames[i]], accounts[farmNames[i]][msg.sender]);
     }
 
 }

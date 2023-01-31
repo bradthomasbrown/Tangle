@@ -3,18 +3,20 @@
 pragma solidity ^0.8.17;
 
 import '../ints/adjustPoints.sol';
+import '../vars/accounts.sol';
+import '../vars/farms.sol';
 import '../vars/generator.sol';
 import '../vars/liquidity.sol';
 
 contract hasExtAdjustStake is
+hasVarAccounts,
+hasVarFarms,
 hasVarGenerator,
 hasVarLiquidity
 {
 
     function adjustStake(int amount) external {
-        Farm storage farm = generator.farms['stake'];
-        Account storage account = farm.accounts[msg.sender];
-        adjustPoints(generator, farm, account, amount);
+        adjustPoints(generator, farms['stake'], accounts['stake'][msg.sender], amount);
         if (amount < 0) liquidity.transfer(msg.sender, uint(-amount));
         else liquidity.transferFrom(msg.sender, address(this), uint(amount));
     }

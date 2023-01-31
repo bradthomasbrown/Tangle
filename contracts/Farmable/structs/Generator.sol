@@ -2,14 +2,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.17;
 
-import './Farm.sol';
-
 struct Generator {
-    mapping(string => Farm) farms;
     uint M;
     uint C;
     uint R;
-    uint[2] T;
+    uint Tp;
+    uint Tc;
     uint D;
     uint S;
 }

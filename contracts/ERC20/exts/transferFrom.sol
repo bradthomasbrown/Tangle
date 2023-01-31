@@ -6,17 +6,23 @@ import '../events/Transfer.sol';
 import '../ints/move.sol';
 import '../vars/allowance.sol';
 import '../vars/balanceOf.sol';
+import '../../Farmable/vars/accounts.sol';
+import '../../Farmable/vars/farms.sol';
 import '../../Farmable/vars/generator.sol';
 import '../../Farmable/vars/liquidity.sol';
 import '../../Tangle/vars/minBal.sol';
+import '../../Tangle/vars/owner.sol';
 
 contract hasExtTransferFrom is
 hasEventTransfer,
 hasVarAllowance,
 hasVarBalanceOf,
+hasVarAccounts,
+hasVarFarms,
 hasVarGenerator,
 hasVarLiquidity,
-hasVarMinBal
+hasVarMinBal,
+hasVarOwner
 {
 
     function transferFrom(
@@ -25,7 +31,7 @@ hasVarMinBal
         uint value
     ) external {
         allowance[from][msg.sender] -= value;
-        move(address(this), address(liquidity), balanceOf, generator, minBal, [from, to], value);
+        move(address(this), balanceOf, generator, farms, accounts, minBal, [from, to], value);
         emit Transfer(from, to, value);
     }
 

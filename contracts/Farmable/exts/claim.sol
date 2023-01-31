@@ -6,22 +6,29 @@ import '../../ERC20/vars/balanceOf.sol';
 import '../../ERC20/ints/move.sol';
 import '../vars/liquidity.sol';
 import '../../Tangle/vars/minBal.sol';
+import '../../Tangle/vars/owner.sol';
+import '../vars/accounts.sol';
+import '../vars/farms.sol';
 import '../vars/generator.sol';
 import '../ints/available.sol';
 
 contract hasExtClaim is
 hasVarBalanceOf,
+hasVarAccounts,
+hasVarFarms,
 hasVarGenerator,
 hasVarLiquidity,
-hasVarMinBal
+hasVarMinBal,
+hasVarOwner
 {
 
     function claim(string[] calldata farmNames) external {
         for (uint i; i < farmNames.length; i++) {
-            Farm storage farm = generator.farms[farmNames[i]];
-            Account storage account = farm.accounts[msg.sender];
+            Account storage account = accounts[farmNames[i]][msg.sender];
+            Farm storage farm = farms[farmNames[i]];
             updateFarm(generator, farm);
-            move(address(this), address(liquidity), balanceOf, generator, minBal, [address(this), msg.sender], _available(generator, farm, account));
+            uint available = _available(generator, farm, account);
+            move(address(this), balanceOf, generator, farms, accounts, minBal, [address(this), msg.sender], available);
             account.S = farm.S;
             account.R = 0;
         }

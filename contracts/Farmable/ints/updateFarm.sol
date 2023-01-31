@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.17;
 
+import '../structs/Farm.sol';
 import './generated.sol';
 
 function updateFarm(
@@ -9,7 +10,7 @@ function updateFarm(
     Farm storage farm    
 ) {
     if (farm.P == 0) return;
-    uint R = farm.N * generated(generator) / farm.D;
+    uint R = farm.N * generated(generator) / generator.D;
     farm.S += (R - farm.R) / farm.P;
     farm.R = R;
 }
