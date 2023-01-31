@@ -1,3 +1,3 @@
 #!/bin/sh
 
-ls -Al $@ | md5sum | tr -d ' -'
+ls -RAl $@ | md5sum | tr -d ' -'
