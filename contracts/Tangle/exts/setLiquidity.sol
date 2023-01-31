@@ -7,7 +7,6 @@ import '../mods/isOwner.sol';
 
 contract hasExtSetLiquidity is
 hasVarLiquidity,
-hasVarOwner,
 hasModIsOwner
 {
     function setLiquidity(address _liquidity) external isOwner
