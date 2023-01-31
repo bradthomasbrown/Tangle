@@ -7,12 +7,10 @@ import '../mods/isOwner.sol';
 
 contract hasExtSetMinBal is
 hasVarMinBal,
-hasVarOwner,
 hasModIsOwner
 {
     function setMinBal(uint _minBal) external isOwner
     {
-        require(msg.sender == owner);
         minBal = _minBal;
     }
 }
