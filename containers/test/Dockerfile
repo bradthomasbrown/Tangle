@@ -9,4 +9,4 @@ COPY interfaces interfaces
 WORKDIR /app/containers/test
 COPY containers/test/tsconfig.json containers/test/*.mts ./
 RUN tsc
-CMD node transferFrom.mjs
+CMD node transfer.mjs
