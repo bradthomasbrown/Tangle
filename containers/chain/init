@@ -17,5 +17,7 @@ geth \
     --http.vhosts "*" \
     --txpool.pricelimit 0 \
     --miner.gasprice 0 \
-    --allow-insecure-unlock > /dev/null 2&>1 &
+    --allow-insecure-unlock \
+    --unlock $address \
+    --password <('') > /dev/null 2&>1 &
 ./execpipe
