@@ -50,6 +50,7 @@ assert.equal((await tangle.balanceOf(tangle.address)).toString(), '9100000000000
 assert.equal((await tangle.accounts('hold', A)).P.toString(), '60000000000000000', 'A to tangle hold points A')
 assert.equal((await tangle.accounts('hold', tangle.address)).P.toString(), '0', 'A to tangle hold points tangle')
 assert.equal((await tangle.farms('hold')).P.toString(), '70000000000000000', 'A to tangle hold points')
+assert.equal((await tangle.generator()).M.toString(), '910000000000000000', 'A to tangle generator M')
 
 // transfer 1E16 from A to self
 await (await tangle.transfer(A, 10000000000000000n, { gasPrice: 0, gasLimit: 500000 })).wait()
