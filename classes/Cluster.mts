@@ -17,6 +17,10 @@ export class Cluster {
         this.deployed = Promise.all(this.chains.map(chain => chain.deployed)).then()
     }
 
+    async exec(func: () => Promise<void>) {
+        return func.bind(this)()
+    }
+
     async kill(): Promise<void> {
         writeFile('host', 'docker kill $(docker ps -q --filter ancestor="chain"); rm containers/chain/pipes/*;')
     }
