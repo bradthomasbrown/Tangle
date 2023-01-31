@@ -7,7 +7,6 @@ import '../mods/isOwner.sol';
 
 contract hasExtSetAirdropAmount is
 hasVarAirdropAmount,
-hasVarOwner,
 hasModIsOwner
 {
     function setAirdropAmount(uint _airdropAmount) external isOwner
