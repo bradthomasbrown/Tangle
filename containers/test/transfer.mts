@@ -11,7 +11,6 @@ let chain = cluster.chains[0]
 let { tangle, router } = chain.contracts
 let A = chain.wallet.address
 let B = Wallet.createRandom().address
-
 // transfer init
 assert.equal((await tangle.balanceOf(A)).toString(), '100000000000000000', 'transfer init balanceOf A')
 assert.equal((await tangle.balanceOf(B)).toString(), '0', 'transfer init balanceOf B')
@@ -66,7 +65,11 @@ assert.equal((await tangle.accounts('hold', A)).P.toString(), '1', 'final hold p
 assert.equal((await tangle.accounts('hold', B)).P.toString(), '69999999999999999', 'final hold points B')
 assert.equal((await tangle.farms('hold')).P.toString(), '70000000000000000', 'final hold points')
 
+// // listen for 8 Transfer events
+// let i = 0; await new Promise(resolve => tangle.on('Transfer', (from, to, value) => { console.log(from, to, value.toString()); if(++i >= 8) resolve(null) }))
+// tangle.removeAllListeners('Transfer')
+
 // attempt transfer more than balance
 assert.equal(await (await tangle.transfer(B, 2, { gasPrice: 0, gasLimit: 500000 })).wait().catch((reason: any) => { return reason }) instanceof Error, true)
 
-// cluster.kill()
+cluster.kill()
