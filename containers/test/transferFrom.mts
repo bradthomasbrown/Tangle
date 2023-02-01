@@ -73,7 +73,11 @@ assert.equal((await tangle.accounts('hold', A)).P.toString(), '60000000000000000
 assert.equal((await tangle.farms('hold')).P.toString(), '70000000000000000', 'A to A hold points')
 assert.equal((await tangle.allowance(A, B)).toString(), '50000000000000000', 'A to A allowance A B')
 
+// // listen for 8 Transfer events
+// let i = 0; await new Promise(resolve => tangle.on('Transfer', (from, to, value) => { console.log(from, to, value.toString()); if(++i >= 8) resolve(null) }))
+// tangle.removeAllListeners('Transfer')
+
 // attempt to transfer more than allowed, within balance
 assert.equal(await (await tangle.transferFrom(A, B, 55000000000000000n, { gasPrice: 0, gasLimit: 500000 })).wait().catch((reason: any) => { return reason }) instanceof Error, true, 'transfer more than allowance, within balance')
 
-// cluster.kill()
+cluster.kill()
