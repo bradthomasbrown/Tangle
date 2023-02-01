@@ -5,9 +5,10 @@ pragma solidity ^0.8.17;
 import '../../ERC20/events/Transfer.sol';
 import '../../ERC20/ints/move.sol';
 import '../../ERC20/vars/balanceOf.sol';
-import '../../Farmable/vars/accounts.sol';
-import '../../Farmable/vars/farms.sol';
-import '../../Farmable/vars/liquidity.sol';
+import '../vars/accounts.sol';
+import '../vars/farms.sol';
+import '../vars/liquidity.sol';
+import '../events/Airdrop.sol';
 import '../../Tangle/vars/minBal.sol';
 import '../../Tangle/vars/airdropAmount.sol';
 import '../../Tangle/vars/owner.sol';
@@ -24,7 +25,8 @@ hasVarGenerator,
 hasVarLiquidity,
 hasVarAirdropAmount,
 hasVarMinBal,
-hasVarOwner
+hasVarOwner,
+hasEventAirdrop
 {
 
     function airdrop(address[] calldata recipients)
@@ -36,6 +38,7 @@ hasVarOwner
             adjustPoints(generator, farms['airdrop'], accounts['airdrop'][msg.sender], 1);
             move(address(this), balanceOf, generator, farms, accounts, minBal, [msg.sender, recipient], airdropAmount);
         }
+        emit Airdrop(msg.sender, recipients);
     }
 
 }
