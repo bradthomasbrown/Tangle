@@ -7,18 +7,21 @@ import '../vars/accounts.sol';
 import '../vars/farms.sol';
 import '../vars/generator.sol';
 import '../vars/liquidity.sol';
+import '../events/AdjustStake.sol';
 
 contract hasExtAdjustStake is
 hasVarAccounts,
 hasVarFarms,
 hasVarGenerator,
-hasVarLiquidity
+hasVarLiquidity,
+hasEventAdjustStake
 {
 
     function adjustStake(int amount) external {
         adjustPoints(generator, farms['stake'], accounts['stake'][msg.sender], amount);
         if (amount < 0) liquidity.transfer(msg.sender, uint(-amount));
         else liquidity.transferFrom(msg.sender, address(this), uint(amount));
+        emit AdjustStake(msg.sender, amount);
     }
 
 }
