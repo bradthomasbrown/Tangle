@@ -12,4 +12,4 @@ let { tangle, router } = chain.contracts;
 await (await tangle.approve(router.address, 123456, { gasPrice: 0 })).wait()
 assert.equal((await tangle.allowance(chain.wallet.address, router.address)).toString(), '123456')
 
-// cluster.kill()
+cluster.kill()
