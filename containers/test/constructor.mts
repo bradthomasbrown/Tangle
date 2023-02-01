@@ -3,9 +3,11 @@ import { AddressZero } from '@ethersproject/constants'
 import assert from 'node:assert/strict'
 
 let cluster = new Cluster(1)
+console.log('awaiting cluster.deployed')
 await cluster.deployed
+console.log('cluster.deployed')
 let chain = cluster.chains[0]
-let { tangle } = chain.contracts['tangle'];
+let { tangle } = chain.contracts;
 
 // ERC20 inits
 assert.equal(await tangle.name(), 'Tangle')
@@ -69,4 +71,7 @@ assert.equal((await tangle.accounts('hold', tangle.address)).R.toString(), '0')
 assert.equal((await tangle.accounts('hold', tangle.address)).P.toString(), '0')
 assert.equal((await tangle.accounts('hold', tangle.address)).S.toString(), '0')
 
-// cluster.kill()
+// listen for Deploy event
+// await new Promise(resolve => tangle.once('Deploy', () => { console.log('Deploy event'); resolve(null) }))
+
+cluster.kill()
