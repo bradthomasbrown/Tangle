@@ -11,6 +11,7 @@ import '../vars/accounts.sol';
 import '../vars/farms.sol';
 import '../vars/generator.sol';
 import '../ints/available.sol';
+import '../events/Claim.sol';
 
 contract hasExtClaim is
 hasVarBalanceOf,
@@ -19,7 +20,8 @@ hasVarFarms,
 hasVarGenerator,
 hasVarLiquidity,
 hasVarMinBal,
-hasVarOwner
+hasVarOwner,
+hasEventClaim
 {
 
     function claim(string[] calldata farmNames) external {
@@ -32,6 +34,7 @@ hasVarOwner
             account.S = farm.S;
             account.R = 0;
         }
+        emit Claim(msg.sender, farmNames);
     }
 
 }
