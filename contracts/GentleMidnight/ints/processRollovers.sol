@@ -22,6 +22,6 @@ function processRollovers(
             Request calldata request = input.requests[reqMod.index];
             requests[j] = Request(request.chain, request.value - reqMod.subtrahend);
         }
-        insert(adisa, Input(input.work, requests, input.sender, input.value - inMod.subtrahend, adisa.count++));
+        insert(adisa, Input(input.work, requests, input.sender, input.value - inMod.subtrahend, input.gas, adisa.count++));
     }
 }
