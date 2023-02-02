@@ -20,6 +20,8 @@ import '../ints/processRollovers.sol';
 import '../ints/processOutputs.sol';
 import '../ints/markInputs.sol';
 import '../ints/getExecutor.sol';
+import '../ints/gas.sol';
+import '../ints/work.sol';
 
 contract hasExtExecute is
 hasModInputsOpen,
@@ -55,11 +57,11 @@ hasVarChunks
         Farm storage farm = farms['GentleMidnight'];
         for (uint i; i < works.length; i++) {
             address worker = works[i].worker;
-            adjustPoints(generator, farm, accounts['GentleMidnight'][worker], int(score(works, worker)));
+            adjustPoints(generator, farm, accounts['GentleMidnight'][worker], int(score(works, worker) * gas(inputs) / work(inputs)));
             payable(worker).transfer(sum(inputs) * 1 * 1 * score(works, worker) / score(works) / 20 / 4);
         }
         address executor = getExecutor(works, max(inputs));
-        adjustPoints(generator, farm, accounts['GentleMidnight'][executor], int(score(works) * 3));
+        adjustPoints(generator, farm, accounts['GentleMidnight'][executor], int(score(works) * 3 * gas(inputs) / work(inputs)));
         payable(executor).transfer(sum(inputs) * 3 * 1 / 20 / 4);
     }
 }
