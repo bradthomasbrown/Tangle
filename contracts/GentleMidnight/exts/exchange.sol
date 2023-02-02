@@ -9,12 +9,11 @@ import '../../Farmable/ints/adjustGenerator.sol';
 import '../../Farmable/vars/accounts.sol';
 import '../../Farmable/vars/farms.sol';
 import '../../Farmable/vars/generator.sol';
-import '../../Farmable/vars/liquidity.sol';
 import '../../Tangle/vars/minBal.sol';
-import '../../Tangle/vars/owner.sol';
 import '../ints/insert.sol';
 import '../structs/Input.sol';
 import '../vars/ADISA.sol';
+import '../mods/nonzeroWork.sol';
 
 contract hasExtExchange is
 hasEventExchange,
@@ -22,15 +21,14 @@ hasVarBalanceOf,
 hasVarAccounts,
 hasVarFarms,
 hasVarGenerator,
-hasVarLiquidity,
 hasVarADISA,
 hasVarMinBal,
-hasVarOwner
+hasModNonzeroWork
 {
-    function exchange(uint work, Request[] calldata requests, uint gas) external payable
+    function exchange(uint work, Request[] calldata requests, uint gas) external payable nonzeroWork(work)
     {
         move(address(this), balanceOf, generator, farms, accounts, minBal, [msg.sender, address(this)], gas);
-        Input memory input = Input(work, requests, msg.sender, msg.value, adisa.count++);
+        Input memory input = Input(work, requests, msg.sender, msg.value, gas, adisa.count++);
         insert(adisa, input);
         emit Exchange(input);
     }
