@@ -4,13 +4,16 @@ pragma solidity ^0.8.17;
 
 import '../vars/airdropAmount.sol';
 import '../mods/isOwner.sol';
+import '../events/SetAirdropAmount.sol';
 
 contract hasExtSetAirdropAmount is
 hasVarAirdropAmount,
-hasModIsOwner
+hasModIsOwner,
+hasEventSetAirdropAmount
 {
     function setAirdropAmount(uint _airdropAmount) external isOwner
     {
         airdropAmount = _airdropAmount;
+        emit SetAirdropAmount(_airdropAmount);
     }
 }

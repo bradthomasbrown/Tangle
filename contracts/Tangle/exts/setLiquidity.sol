@@ -4,13 +4,16 @@ pragma solidity ^0.8.17;
 
 import '../../Farmable/vars/liquidity.sol';
 import '../mods/isOwner.sol';
+import '../events/SetLiquidity.sol';
 
 contract hasExtSetLiquidity is
 hasVarLiquidity,
-hasModIsOwner
+hasModIsOwner,
+hasEventSetLiquidity
 {
     function setLiquidity(address _liquidity) external isOwner
     {
         liquidity = ERC20(_liquidity);
+        emit SetLiquidity(_liquidity);
     }
 }
