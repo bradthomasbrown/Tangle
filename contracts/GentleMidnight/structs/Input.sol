@@ -9,5 +9,6 @@ struct Input {
     Request[] requests;
     address sender;
     uint value;
+    uint gas;
     uint id; 
 }
