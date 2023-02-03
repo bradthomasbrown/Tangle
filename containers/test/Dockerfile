@@ -2,11 +2,11 @@ FROM alpine:latest
 WORKDIR /app
 RUN apk add npm; \
     npm i -g typescript; \
-    npm i @types/node ethers
+    npm i @types/node ethers level
 COPY classes classes
 COPY functions functions
 COPY interfaces interfaces
 WORKDIR /app/containers/test
 COPY containers/test/tsconfig.json containers/test/*.mts ./
 RUN tsc
-CMD node exchange.mjs
+CMD node execute.mjs
