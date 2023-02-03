@@ -22,6 +22,7 @@ import '../ints/markInputs.sol';
 import '../ints/getExecutor.sol';
 import '../ints/gas.sol';
 import '../ints/work.sol';
+import '../events/Execute.sol';
 
 contract hasExtExecute is
 hasModInputsOpen,
@@ -34,18 +35,18 @@ hasVarAccounts,
 hasVarFarms,
 hasVarGenerator,
 hasVarADISA,
-hasVarChunks
+hasVarChunks,
+hasEventExecute
 {
     function execute(
         Stream[] calldata streams, 
         Work[] calldata works, 
-        Proof[] calldata workProofs, 
-        Proof[] calldata inputProofs
+        Proof[] calldata proofs
     ) external
     inputsOpen(stos(streams).inputs, chunks)
     inputsDistinct(stos(streams).inputs)
-    inputsVerified(stos(streams).inputs, inputProofs, adisa)
-    workchainIntact(works, streams, workProofs)
+    inputsVerified(stos(streams).inputs, stos(streams).proofs, adisa)
+    workchainIntact(works, streams, proofs)
     workSufficient(works, stos(streams).inputs)
     followsFirstLaw(stos(streams).inputs, stos(streams).outputs, stos(streams).rollovers)
     {
@@ -63,5 +64,6 @@ hasVarChunks
         address executor = getExecutor(works, max(inputs));
         adjustPoints(generator, farm, accounts['GentleMidnight'][executor], int(score(works) * 3 * gas(inputs) / work(inputs)));
         payable(executor).transfer(sum(inputs) * 3 * 1 / 20 / 4);
+        emit Execute(msg.sender, streams, works, proofs);
     }
 }
