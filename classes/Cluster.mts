@@ -2,6 +2,7 @@ import { writeFile } from 'fs/promises'
 import { Chain } from './Chain.mjs'
 import { compile } from '../functions/compile.mjs'
 import { Compiled } from '../interfaces/Compiled.mjs'
+import { writeFileSync } from 'fs'
 
 export class Cluster {
 
@@ -17,8 +18,8 @@ export class Cluster {
         this.deployed = Promise.all(this.chains.map(chain => chain.deployed)).then()
     }
 
-    async kill(): Promise<void> {
-        writeFile('host', 'docker kill $(docker ps -q --filter ancestor="chain"); rm containers/chain/pipes/*;')
+    kill(): void {
+        writeFileSync('host', 'docker kill $(docker ps -q --filter ancestor="chain"); rm containers/chain/pipes/*;')
     }
 
 }
