@@ -20,6 +20,7 @@ export class Chain {
         let name = `chain${chainid}`
         writeFile('host', `(cd containers/chain; mkfifo pipes/${name}; ./run ${name} ${chainid} &);`)
         this.provider = new JsonRpcProvider(`http://${name}:8545`)
+        this.provider.pollingInterval = 100
         this.wallet = Wallet.createRandom().connect(this.provider)
         this.ready = this.provider.ready
         this.contracts = {}
