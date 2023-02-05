@@ -10,7 +10,8 @@ function processRollovers(
     Rollover[] calldata rollovers,
     Input[] calldata inputs,
     ADISA storage adisa
-) {
+) returns (Input[] memory) {
+    Input[] memory newInputs = new Input[](rollovers.length);
     for (uint i; i < rollovers.length; i++) {
         Rollover calldata rollover = rollovers[i];
         Modifier calldata inMod = rollover.inMod;
@@ -22,6 +23,9 @@ function processRollovers(
             Request calldata request = input.requests[reqMod.index];
             requests[j] = Request(request.chain, request.value - reqMod.subtrahend);
         }
-        insert(adisa, Input(input.work, requests, input.sender, input.value - inMod.subtrahend, input.gas, adisa.count++));
+        Input memory newInput = Input(input.work, requests, input.sender, input.value - inMod.subtrahend, input.gas, adisa.count++);
+        newInputs[i] = newInput;
+        insert(adisa, newInput);
     }
+    return newInputs;
 }
