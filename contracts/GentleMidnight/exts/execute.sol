@@ -22,9 +22,15 @@ import '../ints/markInputs.sol';
 import '../ints/getExecutor.sol';
 import '../ints/gas.sol';
 import '../ints/work.sol';
+import '../ints/score.sol';
+import '../events/Exchange.sol';
+import '../events/Mark.sol';
 import '../events/Execute.sol';
 
 contract hasExtExecute is
+hasEventExchange,
+hasEventMark,
+hasEventExecute,
 hasModInputsOpen,
 hasModInputsDistinct,
 hasModInputsVerified,
@@ -35,8 +41,7 @@ hasVarAccounts,
 hasVarFarms,
 hasVarGenerator,
 hasVarADISA,
-hasVarChunks,
-hasEventExecute
+hasVarChunks
 {
     function execute(
         Stream[] calldata streams, 
@@ -52,18 +57,22 @@ hasEventExecute
     {
         Stream calldata stream = stos(streams);
         Input[] calldata inputs = stream.inputs;
-        processRollovers(stream.rollovers, inputs, adisa);
+        for (uint i; i < inputs.length; i++) emit Mark(inputs[i]);
+        Input[] memory newInputs = processRollovers(stream.rollovers, inputs, adisa);
+        for (uint i; i < newInputs.length; i++) emit Exchange(newInputs[i]);
         processOutputs(stream.outputs);
         markInputs(inputs, chunks);
         Farm storage farm = farms['GentleMidnight'];
-        for (uint i; i < works.length; i++) {
+        (uint e_worksLength, address executor) = getExecutor(works, max(inputs));
+        Work[] memory e_works = new Work[](e_worksLength); 
+        for (uint i; i < e_worksLength; i++) e_works[i] = works[i];
+        for (uint i; i < e_worksLength; i++) {
             address worker = works[i].worker;
-            adjustPoints(generator, farm, accounts['GentleMidnight'][worker], int(score(works, worker) * gas(inputs) / work(inputs)));
-            payable(worker).transfer(sum(inputs) * 1 * 1 * score(works, worker) / score(works) / 20 / 4);
+            adjustPoints(generator, farm, accounts['GentleMidnight'][worker], int(score(e_works, worker) * gas(inputs) / work(inputs)));
+            payable(worker).transfer(sum(stream.outputs) * 1 * 1 * score(e_works, worker) / score(e_works) / 20 / 4);
         }
-        address executor = getExecutor(works, max(inputs));
-        adjustPoints(generator, farm, accounts['GentleMidnight'][executor], int(score(works) * 3 * gas(inputs) / work(inputs)));
-        payable(executor).transfer(sum(inputs) * 3 * 1 / 20 / 4);
+        adjustPoints(generator, farm, accounts['GentleMidnight'][executor], int(score(e_works) * 3 * gas(inputs) / work(inputs)));
+        payable(executor).transfer(sum(stream.outputs) * 3 * 1 / 20 / 4);
         emit Execute(msg.sender, streams, works, proofs);
     }
 }
