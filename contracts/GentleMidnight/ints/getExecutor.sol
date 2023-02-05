@@ -8,11 +8,11 @@ import '../ints/score.sol';
 function getExecutor(
     Work[] calldata works,
     uint max
-) pure returns (address) {
+) pure returns (uint, address) {
     uint sum;
     for (uint i; i < works.length; i++) {
         sum += score(keccak256(abi.encode(works[i])));
-        if (sum >= max) return works[i].worker;
+        if (sum >= max) return (i + 1, works[i].worker);
     }
-    return address(0);
+    return (0, address(0));
 }
