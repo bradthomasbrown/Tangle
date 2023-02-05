@@ -6,6 +6,6 @@ import '../structs/Input.sol';
 
 contract hasEventExchange {
 
-    event Exchange(Input);
+    event Exchange(Input input);
 
 }
