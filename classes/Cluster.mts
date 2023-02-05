@@ -8,14 +8,17 @@ export class Cluster {
 
     compiled: Promise<Compiled>
     chains: Chain[]
-    ready: Promise<void>
     deployed: Promise<void>
     
     constructor(n: number) {
         this.compiled = compile()
         this.chains = [...Array(n).keys()].map(n => new Chain(n + 1, this.compiled))
-        this.ready = Promise.all(this.chains.map(chain => chain.ready)).then()
         this.deployed = Promise.all(this.chains.map(chain => chain.deployed)).then()
+    }
+
+    createChain() {
+        this.chains.push(new Chain(this.chains.length + 1, this.compiled))
+        return this.chains[this.chains.length - 1]
     }
 
     kill(): void {
