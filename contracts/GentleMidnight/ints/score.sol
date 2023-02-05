@@ -9,10 +9,10 @@ function score(bytes32 h) pure returns (uint) {
     return 1 << 255 - log2(uint(h));
 }
 
-function score(Work[] calldata works) pure returns (uint sum) {
+function score(Work[] memory works) pure returns (uint sum) {
     for (uint i; i < works.length; i++) sum += score(keccak256(abi.encode(works[i])));
 }
 
-function score(Work[] calldata works, address worker) pure returns (uint sum) {
+function score(Work[] memory works, address worker) pure returns (uint sum) {
     for (uint i; i < works.length; i++) if (works[i].worker == worker) sum += score(keccak256(abi.encode(works[i])));
 }
