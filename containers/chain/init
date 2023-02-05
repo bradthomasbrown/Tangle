@@ -15,6 +15,10 @@ geth \
     --http.corsdomain "*" \
     --http.addr "0.0.0.0" \
     --http.vhosts "*" \
+    --ws \
+    --ws.api eth,web3,net,debug,personal \
+    --ws.addr "0.0.0.0" \
+    --ws.origins "*" \
     --txpool.pricelimit 0 \
     --miner.gasprice 0 \
     --allow-insecure-unlock \
