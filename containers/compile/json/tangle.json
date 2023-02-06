@@ -9,12 +9,6 @@
             "enabled": true,
             "runs": 65535
         },
-        "remappings": [
-            "ERC20=/app/contracts/ERC20",
-            "Farmable=/app/contracts/Farmable",
-            "GentleMidnight=/app/contracts/GentleMidnight",
-            "Tangle=/app/contracts/Tangle"
-        ],
         "outputSelection": {
             "Tangle": {
                 "Tangle": [ "abi", "evm.bytecode.object" ]
