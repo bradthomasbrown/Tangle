@@ -5,7 +5,7 @@ FROM ethereum/solc:0.8.17 AS s817
 
 FROM alpine:latest
 WORKDIR /app
-RUN apk add git jq; \
+RUN apk add git jq nodejs; \
     git clone https://github.com/Uniswap/v2-core; \
     git clone https://github.com/Uniswap/v2-periphery; \
     git clone https://github.com/Uniswap/solidity-lib; \
