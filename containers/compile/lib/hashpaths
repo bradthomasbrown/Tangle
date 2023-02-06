@@ -6,7 +6,7 @@ tangle) echo \
     /app/contracts/Farmable \
     /app/contracts/GentleMidnight \
     /app/contracts/Tangle \
-    json/tangle.json ;;
+    lib/compile2.mjs ;;
 weth) echo \
     /app/WETH \
     json/weth.json ;;
