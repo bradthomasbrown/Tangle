@@ -10,5 +10,6 @@ docker run \
     -v ~/.cache/Tangle:/.cache \
     -v ~/Tangle/contracts:/app/contracts:ro \
     -v ~/Tangle/containers/test/pipe:/app/containers/compile/test \
+    -v ~/tmp:/tmp \
     -d \
     compile
