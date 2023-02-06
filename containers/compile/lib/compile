@@ -14,7 +14,12 @@ do
     jpath=/.cache/$name.json
 
     compile() {
-        result=$(cat json/$name.json | $compiler $apaths --standard-json)
+        if [ $name = 'tangle' ]
+        then
+            result=$(echo "$(lib/compile2.mjs)" | $compiler --standard-json)
+        else
+            result=$(cat json/$name.json | $compiler $apaths --standard-json)
+        fi
         echo $result > $jpath
         echo $hcurr > $hpath
     }
