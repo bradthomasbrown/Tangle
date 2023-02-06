@@ -12,6 +12,7 @@ docker run \
     --net foo \
     --name test \
     --rm \
+    -e testkey=$testkey \
     -v ~/Tangle/pipe:/app/containers/test/host \
     -v ~/Tangle/containers/test/pipe:/app/containers/test/pipe \
     -v ~/Tangle/containers/chain/pipes:/app/containers/test/pipes \
