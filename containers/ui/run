@@ -1,0 +1,14 @@
+#!/bin/bash
+
+docker build -t ui .
+
+docker run \
+    --init \
+    --net host \
+    --name ui \
+    --rm \
+    -v ~/Tangle/containers/ui/index.html:/app/index.html \
+    -v ~/Tangle/containers/ui/src:/app/src \
+    -v ~/Tangle/containers/ui/public:/app/public \
+    -it \
+    ui
