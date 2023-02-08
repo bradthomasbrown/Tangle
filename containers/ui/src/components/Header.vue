@@ -34,10 +34,8 @@ let click = async () => {
 
 <template>
     <div id="header">
-        <div>
-            <img draggable="false" alt="logo" src="logo64.png">
-            tngl.io
-        </div>
+        <img draggable="false" alt="tngl-logo" src="tngl-logo.svg">
+        tngl.io
         <div class="filler"></div>
         <button
             type="button"
@@ -67,6 +65,10 @@ let click = async () => {
 
 <style scoped>
 
+img {
+    height: 100%;
+}
+
 div {
     display: flex;
     align-items: center;
@@ -77,9 +79,10 @@ div {
 }
 
 #header {
-    padding: 10px 20px;
+    display: flex;
+    gap: 10px;
+    padding: 20px 20px;
     height: 50px;
-    background-color: #2E2E2E;
 }
 
 .filler {
