@@ -1,27 +1,55 @@
 <script lang="ts">
 import Chain from './Chain.vue'
+import chains from '../chains.json'
 export default {
     components: { Chain },
-    props: ['type', 'from', 'chains', 'from'],
+    props: ['type', 'selected', 'i', 'input', 'balance', 'outputs'],
     data() {
         return {
             showOptions: false,
-            selected: this.chains[0]
+            chains: chains
         }
+    },
+    mounted() {
+        let ethereum = window['ethereum']
+        if (!ethereum) return
+        if (this.type == 'from')
+            this.$emit('selectedChange', {
+                i: this.i,
+                selected: ethereum.chainId
+            })
+        if (this.type == 'to')
+            this.$emit('selectedChange', {
+                i: this.i,
+                selected: Object.keys(this.chains).filter(chain => chain != ethereum.chainId)[this.i - 1]
+            })
     },
     methods: {
         focusout(e: FocusEvent) {
             if (!e.target['contains'](e.relatedTarget))
                 this.showOptions = false
+        },
+        selectedChange(e: any) {
+            this.$emit('selectedChange', {
+                i: this.i,
+                selected: e.selected
+            })
+        },
+        setInputVal(e: Event) {
+            let value = e.target['value']
+            let input = isNaN(value) || value === '' ? undefined : BigInt(value * 1e18)
+            this.$emit('inputChange', input)
+        },
+        setOutputVal(e: Event) {
+            let value = e.target['value']
+            let output = isNaN(value) || value === '' ? undefined : BigInt(value * 1e18)
+            this.$emit('outputChange', { i: this.i - 1, n: output })
         }
     },
-    watch: {
-        chains: {
-            handler(newValue, _oldValue) {
-                if (newValue.indexOf(this.selected) == -1)
-                    this.selected = newValue[0]
-            },
-            deep: true
+    computed: {
+        readableBalance() {
+            if (!this.selected[this.i]) return
+            return `${parseInt(String(this.balance / 1e9)) / 1e9} ${chains[this.selected[this.i]].nativeCurrency.symbol}`;
         }
     }
 }
@@ -30,31 +58,36 @@ export default {
 <template>
     <div class="input-container">
         <div class="input-container-header">
-            <div> {{ type == 'from' ? 'From' : 'To' }} </div>
+            <div> {{ type }} </div>
             <div class="filler"></div>
             <div v-show="type == 'from'">
                 Balance
-                <span class="numeric">0.0000000000</span>
+                <span class="numeric">{{ readableBalance }}</span>
             </div>
         </div>
         <div class="input-container-body">
             <div class="input-container-body-object">
-                <input>
+                <input v-if="type == 'from'" @input="setInputVal">
+                <input v-if="type == 'to'" @input="setOutputVal">
                 <div class="line"></div>
             </div>
             <Chain
-                :name="selected"
+                :name="selected[i]"
                 @click="showOptions = !showOptions"
                 :focusout="focusout"
-                :selected="selected"
+                :selected="selected[i]"
+                :i="0"
+                @selectedChange="selectedChange"
             >
                 <div class="options" :hidden="!showOptions" @click.stop>
                     <Chain
-                        v-for="chain in chains.filter((chain: string) => chain != selected)"
+                        v-for="(chain, i) in Object.keys(chains).filter(chain => chain != selected[i])"
                         :name="chain"
                         :focusout="focusout"
                         :selected="selected"
-                        @click="{ selected = chain; showOptions = false; $emit('fromChange', selected) }"
+                        @click="showOptions = false"
+                        :i="i + 1"
+                        @selectedChange="selectedChange"
                     />
                 </div>
             </Chain>
@@ -76,6 +109,7 @@ export default {
     gap: 10px;
     max-width: 750px;
     min-width: 274px;
+    box-shadow: 0px 0px 10px 0px #f5f5f504;
 }
 
 .input-container-header {
