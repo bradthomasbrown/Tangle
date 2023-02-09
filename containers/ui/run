@@ -10,5 +10,6 @@ docker run \
     -v ~/Tangle/containers/ui/index.html:/app/index.html \
     -v ~/Tangle/containers/ui/src:/app/src \
     -v ~/Tangle/containers/ui/public:/app/public \
+    -v ~/Tangle/containers/ui/dist:/app/dist \
     -it \
     ui
