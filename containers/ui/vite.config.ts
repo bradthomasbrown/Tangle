@@ -1,9 +1,14 @@
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
+import { readFileSync } from 'fs'
 
 export default defineConfig({
     server: {
-        host: true
+        host: true,
+        https: {
+            key: readFileSync('/secret/key.pem'),
+            cert: readFileSync('/secret/cert.pem')
+        }
     },
     plugins: [
         [vue()],
