@@ -1,0 +1,5 @@
+default_expiration: '2s'
+runtime: nodejs18
+instance_class: B1
+manual_scaling:
+  instances: 1
