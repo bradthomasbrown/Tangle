@@ -1,13 +1,25 @@
 <script lang="ts">
+import chains from '../chains.json'
 export default {
-    data() { return {} },
-    props: ['name', 'focusout', 'selected'],
+    data() { return { chains: chains } },
+    props: ['name', 'focusout', 'selected', 'i'],
     methods: {
         addActive(e: Event) {
             e.target['classList'].add('active')
         },
         removeActive(e: Event) {
             e.target['classList'].remove('active')
+        },
+        click() {
+            if (this.i > 0)
+                this.$emit('selectedChange', {
+                    selected: this.name
+                })
+        }
+    },
+    computed: {
+        chainKnown() {
+            return Object.keys(this.chains).indexOf(this.name) != -1
         }
     }
 }
@@ -19,18 +31,20 @@ export default {
         @mousedown.stop="addActive"
         @keydown.enter.stop="addActive"
         @keydown.space.stop="addActive"
-        @touchstart="addActive"
+        @touchstart.passive="addActive"
         @mouseup.stop="removeActive"
         @mouseleave.stop="removeActive"
         @keyup.enter.stop="removeActive"
         @keyup.space.stop="removeActive"
         @focusout="focusout"
+        @click="click"
     >
         <div class="chain-logo-container">
-            <img class="chain-logo" :src="`${name}-logo.svg`">
+            <img v-if="chainKnown" class="chain-logo" :src="`${chains[name].chainAbbreviation.replace('-t', '')}-logo.svg`">
+            <span v-if="!chainKnown" class="chain-logo">?</span>
         </div>
         <div class="chain-abbreviation">
-            {{ name?.toUpperCase() }}
+            {{ chainKnown ? chains[name].chainAbbreviation : name }}
         </div>
         <span
             v-show="name == selected"
@@ -91,6 +105,9 @@ button.active .options {
     border-radius: 100%;
     pointer-events: none;
     margin: 5px 0px 5px 15px;
+    color: black;
+    font-size: 32px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 .chain-logo {
@@ -108,10 +125,15 @@ button.active .options {
     pointer-events: none;
 }
 
-span {
+span.material-symbols-outlined {
     font-size: 48px;
     pointer-events: none;
     margin-right: 15px;
+}
+
+span {
+    display: flex;
+    align-items: center;
 }
 
 </style>
