@@ -1,0 +1,18 @@
+#!/bin/bash
+
+docker build -t ui .
+
+docker run \
+    --init \
+    --net host \
+    --name ui \
+    --rm \
+    -e testkey=$testkey \
+    -v ~/Tangle/containers/ui/common:/ui/common \
+    -v ~/Tangle/containers/ui/web/index.html:/ui/web/index.html \
+    -v ~/Tangle/containers/ui/web/vite.config.ts:/ui/web/vite.config.ts \
+    -v ~/Tangle/containers/ui/web/src:/ui/web/src \
+    -v ~/Tangle/containers/ui/web/public:/ui/web/public \
+    -it \
+    ui \
+    npm run dev
