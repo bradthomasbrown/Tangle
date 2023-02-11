@@ -12,11 +12,12 @@ let compiled = await cluster.compiled
 let { tangle } = compiled
 
 {
-    let provider = new JsonRpcProvider(arbtestrpc)
+    let provider = new JsonRpcProvider('https://rpc.sepolia.org/')
     let wallet = new Wallet(`0x${process.env.testkey}`, provider)
-    let factory = new ContractFactory(tangle.abi, tangle.bytecode, wallet)
+    // let factory = new ContractFactory(tangle.abi, tangle.bytecode, wallet)
     // console.log(await provider.getBalance(wallet.address))
-    console.log(await factory.deploy())
+    let Tangle = new Contract('0xe7223a022b8716a96000f43e266aefe7d791cb58', tangle.abi, wallet)
+    console.log(await Tangle.available(['hold']))
     // let tx = factory.getDeployTransaction()
     // console.log(await wallet.estimateGas(tx))
 }
