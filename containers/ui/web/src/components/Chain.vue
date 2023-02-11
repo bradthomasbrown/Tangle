@@ -1,5 +1,5 @@
 <script lang="ts">
-import chains from '../chains.json'
+import chains from '../../../app/chains.json'
 export default {
     data() { return { chains: chains } },
     props: ['name', 'focusout', 'selected', 'i'],

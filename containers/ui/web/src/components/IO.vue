@@ -1,6 +1,6 @@
 <script lang="ts">
 import Chain from './Chain.vue'
-import chains from '../chains.json'
+import chains from '../../../app/chains.json'
 export default {
     components: { Chain },
     props: ['type', 'selected', 'i', 'input', 'balance', 'outputs'],
@@ -49,6 +49,7 @@ export default {
     computed: {
         readableBalance() {
             if (!this.selected[this.i]) return
+            if (!chains[this.selected[this.i]]) return
             return `${parseInt(String(this.balance / 1e9)) / 1e9} ${chains[this.selected[this.i]].nativeCurrency.symbol}`;
         }
     }
