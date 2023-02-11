@@ -2,7 +2,7 @@
     "compilerOptions": {
         "allowSyntheticDefaultImports": true,
         "target": "es2020",
-        "module": "es2022",
+        "module": "esnext",
         "moduleResolution": "node",
         "resolveJsonModule": true
     }
