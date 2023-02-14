@@ -57,22 +57,26 @@ hasVarChunks
     {
         Stream calldata stream = stos(streams);
         Input[] calldata inputs = stream.inputs;
+        Output[] calldata outputs = stream.outputs;
         for (uint i; i < inputs.length; i++) emit Mark(inputs[i]);
+        markInputs(inputs, chunks);
         Input[] memory newInputs = processRollovers(stream.rollovers, inputs, adisa);
         for (uint i; i < newInputs.length; i++) emit Exchange(newInputs[i]);
-        processOutputs(stream.outputs);
-        markInputs(inputs, chunks);
+        processOutputs(outputs);
         Farm storage farm = farms['GentleMidnight'];
-        (uint e_worksLength, address executor) = getExecutor(works, max(inputs));
-        Work[] memory e_works = new Work[](e_worksLength); 
-        for (uint i; i < e_worksLength; i++) e_works[i] = works[i];
-        for (uint i; i < e_worksLength; i++) {
+        for (uint i; i < works.length; i++) {
             address worker = works[i].worker;
-            adjustPoints(generator, farm, accounts['GentleMidnight'][worker], int(score(e_works, worker) * gas(inputs) / work(inputs)));
-            payable(worker).transfer(sum(stream.outputs) * 1 * 1 * score(e_works, worker) / score(e_works) / 20 / 4);
+            Account storage account = accounts['GentleMidnight'][worker];
+            int s = int(
+                score(works, worker) * 
+                gas(inputs) * 
+                sum(outputs) / 
+                work(inputs) /
+                sum(inputs) +
+                inputs.length
+            );
+            adjustPoints(generator, farm, account, s);
         }
-        adjustPoints(generator, farm, accounts['GentleMidnight'][executor], int(score(e_works) * 3 * gas(inputs) / work(inputs)));
-        payable(executor).transfer(sum(stream.outputs) * 3 * 1 / 20 / 4);
         emit Execute(msg.sender, streams, works, proofs);
     }
 }
