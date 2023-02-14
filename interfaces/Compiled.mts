@@ -1,4 +1,4 @@
-import { Interface } from 'ethers/lib/utils.js'
+import { Interface } from "@ethersproject/abi";
 
 export interface Compiled {
     [key: string]: {
