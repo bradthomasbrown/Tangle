@@ -1,5 +1,5 @@
 import { writeFile } from 'fs/promises'
-import { Contract, Wallet } from 'ethers'
+import { Contract, Wallet } from 'ethers5'
 import { JsonRpcProvider, WebSocketProvider } from '@ethersproject/providers'
 import { deployPipeline } from '../functions/index.mjs'
 import { Compiled } from '../interfaces/Compiled.mjs'

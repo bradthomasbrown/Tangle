@@ -1,7 +1,8 @@
 import { AddressZero } from "@ethersproject/constants";
 import { Chain } from "../classes/Chain.mjs";
-import { Contract, ContractFactory, Wallet } from "ethers";
-import { Interface, parseEther } from "ethers/lib/utils.js";
+import { Contract, ContractFactory, Wallet } from "ethers5";
+import { parseEther } from "@ethersproject/units";
+import { Interface } from "@ethersproject/abi";
 import { drink } from "./index.mjs";
 
 export async function deployPipeline(this: Chain) {

@@ -1,5 +1,5 @@
 import { JsonRpcProvider, WebSocketProvider } from '@ethersproject/providers'
-import { Contract, ContractFactory, Wallet } from 'ethers'
+import { Contract, ContractFactory, Wallet } from 'ethers5'
 import { Cluster } from '../../classes/Cluster.mjs'
 
 let ethtestrpc = 'https://rpc.sepolia.org/'
