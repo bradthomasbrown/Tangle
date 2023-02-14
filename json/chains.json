@@ -1,0 +1,54 @@
+{
+    "0xaa36a7": {
+        "id": "0xaa36a7",
+        "chainAbbreviation": "eth-t",
+        "chainName": "Sepolia Ethereum Testnet",
+        "nativeCurrency" :{
+            "name": "Ethereum",
+            "symbol": "ETH",
+            "decimals": 18
+        },
+        "rpcUrls": ["https://rpc.ankr.com/eth_sepolia"],
+        "blockExplorerUrls": ["https://sepolia.etherscan.io"],
+        "deployBlock": 2842589
+    },
+    "0x61": {
+        "id": "0x61",
+        "chainAbbreviation": "bsc-t",
+        "chainName": "Binance Smart Chain Testnet",
+        "nativeCurrency" :{
+            "name": "Binance Coin",
+            "symbol": "BNB",
+            "decimals": 18
+        },
+        "rpcUrls": ["https://rpc.ankr.com/bsc_testnet_chapel"],
+        "blockExplorerUrls": ["https://testnet.bscscan.com/"],
+        "deployBlock": 26990308
+    },
+    "0xa869": {
+        "id": "0xa869",
+        "chainAbbreviation": "avax-t",
+        "chainName": "Avalanche Testnet",
+        "nativeCurrency" :{
+            "name": "Avalanche",
+            "symbol": "AVAX",
+            "decimals": 18
+        },
+        "rpcUrls": ["https://rpc.ankr.com/avalanche_fuji"],
+        "blockExplorerUrls": ["https://testnet.snowtrace.io/"],
+        "deployBlock": 18682179
+    },
+    "0xfa2": {
+        "id": "0xfa2",
+        "chainAbbreviation": "ftm-t",
+        "chainName": "Fantom Testnet",
+        "nativeCurrency" : {
+            "name": "Fantom",
+            "symbol": "FTM",
+            "decimals": 18
+        },
+        "rpcUrls": ["https://rpc.ankr.com/fantom_testnet"],
+        "blockExplorerUrls": ["https://testnet.ftmscan.com/"],
+        "deployBlock": 13754686
+    }
+}
