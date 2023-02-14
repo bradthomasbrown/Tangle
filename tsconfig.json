@@ -1,9 +1,13 @@
 {
     "compilerOptions": {
+        "baseUrl": "./",
+        "paths": {
+            "@/*": ["./*"]
+        },
         "resolveJsonModule": true,
         "module": "ESNext",
         "moduleResolution": "node",
-        "target": "ES6",
+        "target": "es2020",
         "allowSyntheticDefaultImports": true
     }
 }
