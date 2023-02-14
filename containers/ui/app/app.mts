@@ -1,19 +1,20 @@
 import express from 'express'
-import { ethers, Wallet } from 'ethers'
+import { ethers, Wallet } from 'ethers5'
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager'
-import tnglJson from './tngl.json' assert { type: "json" };
-import chains from './chains.json' assert { type: "json" };
 import { JsonRpcProvider } from '@ethersproject/providers'
+import chains from './chains.json' assert { type: "json" }
+import tnglJson from './tngl.json' assert { type: "json" }
 
 process.env.GOOGLE_APPLICATION_CREDENTIALS = './bradbrownllc-tngl-6f28aeff09d5.json'
 
 let client = new SecretManagerServiceClient()
-let name = 'projects/bradbrownllc-tngl/secrets/testnet-faucet-private-key/versions/1'
+let name = 'projects/bradbrownllc-tngl/secrets/testnet-faucet-private-key/versions/3'
 let { payload } = (await client.accessSecretVersion({ name }))[0]
 let key = payload.data.toString()
 
 let { Contract } = ethers
 let { address, abi } = tnglJson
+
 
 let app = express()
 let port = process.env.PORT || 80
