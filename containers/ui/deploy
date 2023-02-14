@@ -1,6 +1,9 @@
 #!/bin/bash
 
-docker build -t ui .
+tar -cf - -C ~/Tangle \
+    json \
+    containers/ui | \
+docker build -t ui -f containers/ui/Dockerfile -
 
 docker run \
     --init \
@@ -13,6 +16,8 @@ docker run \
     -v ~/Tangle/containers/ui/web/vite.config.ts:/ui/web/vite.config.ts \
     -v ~/Tangle/containers/ui/web/src:/ui/web/src \
     -v ~/Tangle/containers/ui/web/public:/ui/web/public \
+    -v ~/Tangle/json/tngl.json:/ui/web/src/components/tngl.json \
+    -v ~/Tangle/json/chains.json:/ui/web/src/components/chains.json \
     -it \
     ui \
     /bin/bash -c "vite build; cd ../app; tsc; gcloud app deploy -q"

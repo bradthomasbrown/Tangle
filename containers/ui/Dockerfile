@@ -6,13 +6,18 @@ RUN apk add npm; \
         vite; \
     npm i \
         @vitejs/plugin-vue \
-        ethers@5.7.2 \
+        ethers5@npm:ethers@5.7.2 \
         @google-cloud/secret-manager \
         express \
         @types/express
 RUN npm create -y vite@latest web -- --template vue-ts
 WORKDIR /ui/web
 RUN npm install
+WORKDIR /ui
+COPY json json
 WORKDIR /ui/app
-COPY app/* .
+COPY \
+    containers/ui/app/* \
+    json/*.json \
+    ./
 WORKDIR /ui/web
