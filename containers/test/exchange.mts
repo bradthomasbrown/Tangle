@@ -1,8 +1,10 @@
-import { defaultAbiCoder, keccak256, parseEther } from 'ethers/lib/utils.js'
+import { parseEther } from '@ethersproject/units'
+import { keccak256 } from '@ethersproject/keccak256'
+import { defaultAbiCoder } from '@ethersproject/abi'
 import { Cluster } from '../../classes/index.mjs'
 import { drink } from '../../functions/drink.mjs'
 import assert from 'node:assert/strict'
-import { BigNumber } from 'ethers'
+import { BigNumber } from 'ethers5'
 
 let cluster = new Cluster(1)
 console.log('awaiting cluster.deployed')

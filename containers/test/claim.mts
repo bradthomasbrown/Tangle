@@ -1,8 +1,8 @@
-import { BigNumber, Contract, Wallet } from 'ethers'
+import { BigNumber, Contract, Wallet } from 'ethers5'
 import { Cluster } from '../../classes/index.mjs'
 import assert from 'node:assert/strict'
 import { drink } from '../../functions/drink.mjs'
-import { parseEther } from 'ethers/lib/utils.js'
+import { parseEther } from '@ethersproject/units'
 
 let cluster = new Cluster(1)
 console.log('awaiting cluster.deployed')

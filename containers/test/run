@@ -4,6 +4,7 @@ tar -cf - -C ~/Tangle \
     classes \
     functions \
     interfaces \
+    json \
     containers/test | \
 docker build -t test -f containers/test/Dockerfile -
 

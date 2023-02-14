@@ -1,4 +1,4 @@
-import { Wallet } from 'ethers'
+import { Wallet } from 'ethers5'
 import { Cluster } from '../../classes/index.mjs'
 import { AddressZero } from '@ethersproject/constants'
 import assert from 'node:assert/strict'
