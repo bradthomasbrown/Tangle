@@ -1,0 +1,17 @@
+#!/bin/bash
+
+tar -cf - -C ~/Tangle \
+    classes \
+    functions \
+    interfaces \
+    json \
+    containers/mine | \
+docker build -t mine -f containers/mine/Dockerfile -
+
+docker run \
+    --init \
+    --name mine \
+    --rm \
+    -v ~/Tangle/containers/mine/mine.mts:/app/containers/mine/mine.mts \
+    -it \
+    mine

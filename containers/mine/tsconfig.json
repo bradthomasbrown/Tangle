@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "allowSyntheticDefaultImports": true,
+        "target": "es2022",
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "resolveJsonModule": true
+    }
+}
