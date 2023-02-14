@@ -1,10 +1,12 @@
 <script lang="ts">
 import IO from './IO.vue'
-import { BigNumber, ethers } from 'ethers'
+import { BigNumber, ethers } from 'ethers5'
+import chains from '@/json/chains.json' assert { type: "json" }
+import tnglJson from '@/json/tngl.json' assert { type: "json" }
+
 let { providers, Contract } = ethers
 let { Web3Provider } =  providers
-import tnglJson from '../../../app/tngl.json'
-import chains from '../../../app/chains.json'
+
 export default {
     components: { IO },
     data() {
@@ -43,10 +45,10 @@ export default {
                 this.tangle = undefined
                 return
             }
-            let { address, abi, code } = tnglJson
+            let { address, abi, bytecode } = tnglJson
             let provider = new Web3Provider(ethereum);
             let signer = provider.getSigner()
-            if (await provider.getCode(address) == code) {
+            if (await provider.getCode(address) == bytecode) {
                 this.tangle = new Contract(address, abi, signer)
                 let balance = await this.tangle.balanceOf(ethereum.selectedAddress)
                 this.enoughTangle = balance.gte(BigNumber.from('1000000000'))

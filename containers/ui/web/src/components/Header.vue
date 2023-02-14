@@ -1,5 +1,5 @@
 <script lang="ts">
-import { ethers } from 'ethers'
+import { ethers } from 'ethers5'
 let { providers } = ethers
 let { Web3Provider } = providers
 export default {

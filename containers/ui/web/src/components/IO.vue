@@ -1,6 +1,7 @@
 <script lang="ts">
 import Chain from './Chain.vue'
-import chains from '../../../app/chains.json'
+import chains from '@/json/chains.json' assert { type: "json" }
+
 export default {
     components: { Chain },
     props: ['type', 'selected', 'i', 'input', 'balance', 'outputs'],
