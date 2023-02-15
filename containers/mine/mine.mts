@@ -49,16 +49,34 @@ function createIndividual() {
                 value: `0x${Math.floor(Math.random() * (htof(_[1]) + 1)).toString(16)}`
             }
         })
-        streams[chain].inputs.forEach((input: any) => {
-            input.value = `0x${Math.floor(Math.random() * (htof(input.value) + 1)).toString(16)}`
-        })
         streams[chain].outputs = recipientRandom
+        streams[chain].inputs.forEach((input: any) => {
+            
+        })
     })
     return streams
 }
 
+function streamFitness(stream: any) {
+    let { inputs, outputs } = stream
+    let gas: bigint = inputs.reduce((p: any, c: any) => p + BigInt(c.gas), 0n)
+    let outVal: bigint = outputs.reduce((p: any, c: any) => p + BigInt(c.value), 0n)
+    let inVal: bigint = inputs.reduce((p: any, c: any) => p + BigInt(c.value), 0n)
+    if (!inVal) return 0
+    console.log(`gas ${gas}`)
+    console.log(`outVal ${outVal}`)
+    console.log(`inVal ${inVal}`)
+    let score = gas * outVal / inVal
+    console.log(`score ${score}`)
+    return parseFloat(String(score)) / parseFloat(String(gas))
+}
+
+console.log(JSON.stringify(open))
 let individual = createIndividual()
 console.log(JSON.stringify(individual))
+Object.entries(individual).forEach(e => {
+    console.log(`${e[0]} ${streamFitness(e[1])}`)
+})
 
 // let popCount = 100
 // let population = Array.from({ length: popCount }, createIndividual)
