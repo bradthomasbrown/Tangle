@@ -9,9 +9,9 @@ contract hasModWorkSufficient {
 
     modifier workSufficient (
         Work[] calldata works,
-        Input[] calldata inputs
+        Request[] calldata requests
     ) {
-        require(score(works) >= max(inputs), 'work insufficient');
+        require(score(works) >= max(requests), 'work insufficient');
         _;
     }
 

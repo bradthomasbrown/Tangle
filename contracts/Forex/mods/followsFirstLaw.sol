@@ -7,11 +7,10 @@ import '../ints/sum.sol';
 contract hasModFollowsFirstLaw {
 
     modifier followsFirstLaw(
-        Input[] calldata inputs,
-        Output[] calldata outputs,
-        Rollover[] calldata rollovers
+        Request[] calldata requests,
+        Output[] calldata outputs
     ) {
-        require(sum(inputs) == sum(outputs) + sum(rollovers, inputs), 'first law broken');
+        require(sum(requests) == sum(outputs), 'first law broken');
         _;
     }
 

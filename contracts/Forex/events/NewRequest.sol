@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.17;
 
-import './exts/exchange.sol';
-import './exts/execute.sol';
+import '../structs/Request.sol';
 
-contract GentleMidnight is
-hasExtExchange,
-hasExtExecute
-{}
+contract hasEventNewRequest {
+
+    event NewRequest(Request request);
+
+}

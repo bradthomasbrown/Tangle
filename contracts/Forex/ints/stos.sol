@@ -6,5 +6,7 @@ import '../structs/Stream.sol';
 
 function stos(Stream[] calldata streams) view returns (Stream calldata stream) {
     stream = streams[0];
-    for (uint i; i < streams.length; i++) if (streams[i].chain == block.chainid) return streams[i];
+    for (uint i; i < streams.length; i++)
+        if (streams[i].chain == block.chainid)
+            return streams[i];
 }

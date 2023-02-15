@@ -2,10 +2,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.17;
 
-import '../structs/Input.sol';
+contract hasEventMark {
 
-contract hasEventExchange {
-
-    event Exchange(Input input);
+    event Mark(uint id);
 
 }

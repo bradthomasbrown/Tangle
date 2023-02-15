@@ -2,15 +2,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.17;
 
-import './Input.sol';
+import './Request.sol';
 import './Output.sol';
-import './Rollover.sol';
 import './Proof.sol';
 
 struct Stream {
-    Input[] inputs;
+    Request[] requests;
     Proof[] proofs;
     Output[] outputs;
-    Rollover[] rollovers;
     uint chain;
 }

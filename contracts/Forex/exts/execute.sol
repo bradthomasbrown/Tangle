@@ -8,32 +8,30 @@ import '../../Farmable/vars/farms.sol';
 import '../../Farmable/vars/generator.sol';
 
 import '../ints/stos.sol';
-import '../mods/inputsOpen.sol';
+import '../mods/requestsOpen.sol';
 import '../vars/chunks.sol';
-import '../mods/inputsVerified.sol';
+import '../mods/requestsVerified.sol';
 import '../vars/ADISA.sol';
 import '../mods/workchainIntact.sol';
 import '../mods/workSufficient.sol';
 import '../mods/followsFirstLaw.sol';
-import '../mods/inputsDistinct.sol';
-import '../ints/processRollovers.sol';
+import '../mods/requestsDistinct.sol';
 import '../ints/processOutputs.sol';
-import '../ints/markInputs.sol';
-import '../ints/getExecutor.sol';
+import '../ints/markRequests.sol';
 import '../ints/gas.sol';
 import '../ints/work.sol';
 import '../ints/score.sol';
-import '../events/Exchange.sol';
+import '../events/NewRequest.sol';
 import '../events/Mark.sol';
 import '../events/Execute.sol';
 
 contract hasExtExecute is
-hasEventExchange,
+hasEventNewRequest,
 hasEventMark,
 hasEventExecute,
-hasModInputsOpen,
-hasModInputsDistinct,
-hasModInputsVerified,
+hasModRequestsOpen,
+hasModRequestsDistinct,
+hasModRequestsVerified,
 hasModWorkchainIntact,
 hasModWorkSufficient,
 hasModFollowsFirstLaw,
@@ -48,20 +46,18 @@ hasVarChunks
         Work[] calldata works, 
         Proof[] calldata proofs
     ) external
-    inputsOpen(stos(streams).inputs, chunks)
-    inputsDistinct(stos(streams).inputs)
-    inputsVerified(stos(streams).inputs, stos(streams).proofs, adisa)
+    requestsOpen(stos(streams).requests, chunks)
+    requestsDistinct(stos(streams).requests)
+    requestsVerified(stos(streams).requests, stos(streams).proofs, adisa)
     workchainIntact(works, streams, proofs)
-    workSufficient(works, stos(streams).inputs)
-    followsFirstLaw(stos(streams).inputs, stos(streams).outputs, stos(streams).rollovers)
+    workSufficient(works, stos(streams).requests)
+    followsFirstLaw(stos(streams).requests, stos(streams).outputs)
     {
         Stream calldata stream = stos(streams);
-        Input[] calldata inputs = stream.inputs;
+        Request[] calldata requests = stream.requests;
         Output[] calldata outputs = stream.outputs;
-        for (uint i; i < inputs.length; i++) emit Mark(inputs[i]);
-        markInputs(inputs, chunks);
-        Input[] memory newInputs = processRollovers(stream.rollovers, inputs, adisa);
-        for (uint i; i < newInputs.length; i++) emit Exchange(newInputs[i]);
+        markRequests(requests, chunks);
+        for (uint i; i < requests.length; i++) emit Mark(requests[i].id);
         processOutputs(outputs);
         Farm storage farm = farms['GentleMidnight'];
         for (uint i; i < works.length; i++) {
@@ -69,11 +65,8 @@ hasVarChunks
             Account storage account = accounts['GentleMidnight'][worker];
             int s = int(
                 score(works, worker) * 
-                gas(inputs) * 
-                sum(outputs) / 
-                work(inputs) /
-                sum(inputs) +
-                inputs.length
+                gas(requests) *
+                work(requests)
             );
             adjustPoints(generator, farm, account, s);
         }

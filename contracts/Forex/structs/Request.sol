@@ -2,9 +2,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.17;
 
-import './Modifier.sol';
 
-struct Rollover {
-    Modifier inMod;
-    Modifier[] reqMods;
+struct Request {
+    address sender;
+    uint gas;
+    uint work;
+    uint source;
+    uint dest;
+    uint input;
+    uint output;
+    uint id; 
 }

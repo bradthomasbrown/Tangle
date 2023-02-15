@@ -5,14 +5,15 @@ pragma solidity ^0.8.17;
 import '../ints/verify.sol';
 import '../structs/ADISA.sol';
 
-contract hasModInputsVerified {
+contract hasModRequestsVerified {
 
-    modifier inputsVerified (
-        Input[] calldata inputs,
+    modifier requestsVerified (
+        Request[] calldata requests,
         Proof[] calldata proofs,
         ADISA storage adisa
     ) {
-        for (uint i; i < inputs.length; i++) require(verify(inputs[i], proofs[i], adisa), 'input unverified');
+        for (uint i; i < requests.length; i++)
+            require(verify(requests[i], proofs[i], adisa), 'input unverified');
         _;
     }
 
