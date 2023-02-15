@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 
 import '../ERC20/ERC20.sol';
 import '../Farmable/Farmable.sol';
-import '../GentleMidnight/GentleMidnight.sol';
+import '../Forex/Forex.sol';
 import '../Tangle/vars/minBal.sol';
 import '../Tangle/vars/airdropAmount.sol';
 import '../Tangle/vars/owner.sol';
@@ -18,7 +18,7 @@ import '../Tangle/events/Deploy.sol';
 contract Tangle is
 ERC20,
 Farmable,
-GentleMidnight,
+Forex,
 hasExtSetLiquidity,
 hasExtSetMinBal,
 hasExtSetAirdropAmount,

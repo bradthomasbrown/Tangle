@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.17;
 
-import '../../GentleMidnight/vars/ADISA.sol';
+import '../../Forex/vars/ADISA.sol';
 
 contract hasExtRoot is
 hasVarADISA

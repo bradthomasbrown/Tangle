@@ -10,7 +10,6 @@ function updateFarm(
     Farm storage farm    
 ) {
     if (farm.P == 0) return;
-    uint R = farm.N * generated(generator) / generator.D;
-    farm.S += (R - farm.R) / farm.P;
-    farm.R = R;
+    farm.S += (generated(generator, farm) - farm.R) / farm.P;
+    farm.R = generated(generator, farm);
 }

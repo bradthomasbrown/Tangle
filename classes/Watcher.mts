@@ -7,8 +7,8 @@ import { AbiCoder } from "@ethersproject/abi"
 import { Synchronizer } from "./Synchronizer.mjs"
 import { Level } from "level"
 
-let tRequest = `tuple(uint chain, uint value)`
-let tInput = `tuple(uint work, ${tRequest}[] requests, address sender, uint value, uint gas, uint id)`
+let tSubex = `tuple(uint input, uint chain, uint output)`
+let tInput = `tuple(uint work, ${tSubex}[] subexs, address sender, uint value, uint gas, uint id)`
 
 let coerceFunc = (type: string, value: any) => {
     if (value instanceof BigNumber) return BigInt(String(value))

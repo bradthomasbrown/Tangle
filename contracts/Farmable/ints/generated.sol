@@ -3,6 +3,7 @@
 pragma solidity ^0.8.17;
 
 import '../structs/Generator.sol';
+import '../structs/Farm.sol';
 
 function generated(
     Generator storage self
@@ -15,4 +16,11 @@ function generated(
     uint t = block.timestamp;
     uint g = M-(C+Tc-Tp)*(M-R)/(t+C-Tp);
     return g * self.S;
+}
+
+function generated(
+    Generator storage self,
+    Farm storage farm
+) view returns (uint) {
+    return farm.N * generated(self) / self.D;
 }
