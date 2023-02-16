@@ -11,5 +11,5 @@ docker run \
     -v ~/Tangle/contracts:/app/contracts:ro \
     -v ~/Tangle/containers/test/pipe:/app/containers/compile/test \
     -v ~/tmp:/tmp \
-    -d \
+    -it \
     compile

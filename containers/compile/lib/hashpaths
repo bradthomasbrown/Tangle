@@ -2,10 +2,7 @@
 
 case $1 in
 tangle) echo \
-    /app/contracts/ERC20 \
-    /app/contracts/Farmable \
-    /app/contracts/GentleMidnight \
-    /app/contracts/Tangle \
+    /app/contracts \
     lib/compile2.mjs ;;
 weth) echo \
     /app/WETH \
