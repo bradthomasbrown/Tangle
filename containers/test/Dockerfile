@@ -13,4 +13,4 @@ COPY json json
 WORKDIR /app/containers/test
 COPY containers/test/tsconfig.json containers/test/*.mts ./
 RUN tsc
-CMD node deploy.mjs
+CMD node claim.mjs
