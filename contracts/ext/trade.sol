@@ -10,7 +10,6 @@ contract hasExtTrade is hasVarADISA, hasIntMove {
     external payable {
         require(work != 0, 'zero work');
         if (balanceOf[msg.sender] - gas < minBal) gas -= minBal;
-        if (gas == 0) return;
         move(msg.sender, address(this), gas);
         Request memory request = Request(msg.sender, gas,  work, block.chainid,
             dest, msg.value, output, adisa.count++);

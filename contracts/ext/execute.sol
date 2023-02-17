@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: © 2023 BRAD BROWN, LLC <bradbrown@bradbrown.llc>
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.18;
+import '../enum/FarmID.sol';
 import '../free/log2.sol';
 import '../free/score.sol';
 import '../free/updateFarm.sol';
@@ -10,7 +11,7 @@ import '../struct/Request.sol';
 import '../var/accs.sol';
 import '../var/ADISA.sol';
 import '../var/farms.sol';
-contract hasExtExecute is hasVarADISA, hasVarAccs, hasVarFarms {
+contract hasExtExecute is hasVarAccs, hasVarADISA, hasVarFarms {
     function execute(Stream[] calldata streams, Work[] calldata works, 
     Proof[] calldata proofs) external {
         uint streamIndex;
@@ -38,7 +39,7 @@ contract hasExtExecute is hasVarADISA, hasVarAccs, hasVarFarms {
         for (uint i; i < outputs.length; i++) {
             payable(outputs[i].recipient).transfer(outputs[i].value);
             outputValues += outputs[i].value; }
-        Farm storage farm = farms['mine'];
+        Farm storage farm = farms[FarmID.MINE];
         Gen storage gen = farm.gen;
         for (uint i; i < works.length; i++)
             totalWork += score(keccak256(abi.encode(works[i])));
@@ -51,8 +52,8 @@ contract hasExtExecute is hasVarADISA, hasVarAccs, hasVarFarms {
             uint work;
             for (uint j; j < works.length; j++)
                 if (works[j].worker == worker)
-                    work +=score(keccak256(abi.encode(works[j])));
-            Acc storage acc = accs['mine'][worker];
+                    work += score(keccak256(abi.encode(works[j])));
+            Acc storage acc = accs[FarmID.MINE][worker];
             uint points = work * gas / totalWork;
             acc.reward += acc.points * (farm.sigma - acc.sigma)
                 / gen.valueScaler;

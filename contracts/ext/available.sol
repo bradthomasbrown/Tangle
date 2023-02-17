@@ -3,7 +3,7 @@
 pragma solidity ^0.8.18;
 import '../int/getAvail.sol';
 contract hasExtAvailable is hasIntGetAvail {
-    function available(address guy, string[] calldata ids) external view 
+    function available(address guy, uint[] calldata ids) external view 
     returns (uint[] memory avails) {
         avails = new uint[](ids.length);
         for (uint i; i < avails.length; i++)
