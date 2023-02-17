@@ -8,6 +8,13 @@ import assert from 'node:assert/strict'
 import { BigNumber, Wallet } from 'ethers5'
 import { Level } from 'level'
 
+enum FarmID {
+    HOLD,
+    AIRDROP,
+    STAKE,
+    MINE,
+}
+
 let cluster = new Cluster(0)
 await cluster.deployed
 for (let c = 0; c < 10; c++) {
@@ -18,13 +25,10 @@ for (let c = 0; c < 10; c++) {
     let { tangle } = chain.contracts
     let owner = chain.wallet
     let executor = Wallet.createRandom().connect(provider)
-    let t_request = `tuple(uint chain, uint value)`
-    let t_input = `tuple(uint work, ${t_request}[] requests, address sender, uint value, uint gas, uint id)`
+    let t_request = `tuple(address sender, uint gas, uint work, uint source, uint dest, uint input, uint output, uint id)`
     let t_proof = `tuple(bytes32[] hashes, uint index, uint subtree)`
     let t_output = `tuple(address recipient, uint value)`
-    let t_modifier = `tuple(uint index, uint subtrahend)`
-    let t_rollover = `tuple(${t_modifier} inMod, ${t_modifier}[] reqMods)`
-    let t_stream = `tuple(${t_input}[] inputs, ${t_proof}[] proofs, ${t_output}[] outputs, ${t_rollover}[] rollovers, uint chain)`
+    let t_stream = `tuple(${t_request}[] requests, ${t_proof}[] proofs, ${t_output}[] outputs, uint chain)`
     let t_work = `tuple(bytes32 root, address worker, uint n)`
 
     let db = new Level(`db${c}`)
@@ -76,21 +80,22 @@ for (let c = 0; c < 10; c++) {
         let proof = buildProof(index, tree)
         return { hashes: proof, index: id % 2 ** subtree, subtree: subtree }
     }
-    let allInputs = []
+    let allRequests = []
     let handleExchange = async (input: any) => { 
-        await db.put(input.id.toString(), keccak256(defaultAbiCoder.encode([t_input], [input])))
-        if (allInputs.push(input) == exchangeCount) finish()
+        await db.put(input.id.toString(), keccak256(defaultAbiCoder.encode([t_request], [input])))
+        if (allRequests.push(input) == exchangeCount) finish()
     }
-    tangle.on('Exchange', handleExchange)
+    tangle.on('NewRequest', handleExchange)
 
-    // create exchanges
+    // create requests
     for (let i = 0; i < exchangeCount; i++) {
-        console.log(`creating exchange ${i} on chain ${c}`)
+        console.log(`creating request ${i} on chain ${c}`)
         // randomize exchange parameters
         let work = parseInt(String(Math.random() * (10000 + 1) + 10000))
-        let requestValue = `${String((Math.random() * 2 - 1) * 0.01 + 0.95).substring(0,11)}${String(Math.random()).substring(2,11)}`
+        let output = `${String((Math.random() * 2 - 1) * 0.01 + 0.95).substring(0,11)}${String(Math.random()).substring(2,11)}`
         let gas = parseInt(String(Math.random() * (100000 - 100 + 1) + 100))
-        let value = `${String((Math.random() * 2 - 1) * 0.01 + 1).substring(0,11)}${String(Math.random()).substring(2,11)}`
+        let input = `${String((Math.random() * 2 - 1) * 0.01 + 1).substring(0,11)}${String(Math.random()).substring(2,11)}`
+        let dest = '8002'
         // create random wallet
         let wallet = Wallet.createRandom().connect(provider)
         // switch context to owner
@@ -100,9 +105,9 @@ for (let c = 0; c < 10; c++) {
         // switch context to random wallet
         tangle = tangle.connect(wallet)
         // send spending ETH to random wallet
-        await drink.bind(chain)(wallet.address, value)
+        await drink.bind(chain)(wallet.address, input)
         // exchange
-        await (await tangle.exchange(work, [{ chain: 2, value: parseEther(requestValue) }], gas, { value: parseEther(value), gasPrice: 0, gasLimit: 250000 })).wait()
+        await (await tangle.trade(gas, work, dest, parseEther(output), { value: parseEther(input), gasPrice: 0, gasLimit: 250000 })).wait()
     }
     // switch context to executor
     tangle = tangle.connect(executor)
@@ -115,25 +120,24 @@ for (let c = 0; c < 10; c++) {
 
     // build inputs
     // console.log(`building inputs on chain ${c}`)
-    let inputs = [0, 5, 6, 7].map(i => allInputs[i])
+    let requests = [0, 5, 6, 7].map(i => allRequests[i])
     // add a duplicate input on chain 2
     if (c == 1) {
         console.log(`adding duplicate input to inputs on chain ${c}`)
-        inputs.push(allInputs[5])
+        requests.push(allRequests[5])
     }
     if (c == 3) {
         console.log(`incrementing value of input 0 by 1 on chain ${c}`)
-        let input = { ...inputs[0] }
-        input.value = input.value.add(1)
-        input.requests = inputs[0].requests
-        inputs[0] = input
+        let request = { ...requests[0] }
+        request.input = request.input.add(1)
+        requests[0] = request
     }
     // console.log(inputs)
     // console.log(inputs.map(input => keccak256(defaultAbiCoder.encode([t_input], [input]))))
 
     // build inputProofs
     // console.log(`building input proofs on chain ${c}`)
-    let proofs = await Promise.all(inputs.map(async input => proof(parseInt(String(input.id)))))
+    let proofs = await Promise.all(requests.map(async request => proof(parseInt(String(request.id)))))
     if (c == 2) {
         console.log(`incrementing proof 0 hash 0 by 1 on chain ${c}`)
         proofs[0].hashes[0] = `0x${(BigInt(proofs[0].hashes[0]) + 1n).toString(16).padStart(64, '0')}`
@@ -142,12 +146,12 @@ for (let c = 0; c < 10; c++) {
 
     // build outputs
     // console.log(`building outputs on chain ${c}`)
-    let inputsValue = inputs.map(input => input.value).reduce((p, c) => p.add(c))
+    let requestInputs = requests.map(request => request.input).reduce((p, c) => p.add(c))
     let recipient0 = Wallet.createRandom().address
     let recipient1 = Wallet.createRandom().address
     let outputs = [
-        { recipient: recipient0, value: inputsValue.mul(2).div(3) },
-        { recipient: recipient1, value: inputsValue.sub(inputsValue.mul(2).div(3)).sub(inputs[1].value.sub(parseEther('0.5'))) }
+        { recipient: recipient0, value: requestInputs.mul(2).div(3) },
+        { recipient: recipient1, value: requestInputs.sub(requestInputs.mul(2).div(3)) }
     ]
     if (c == 6) {
         console.log(`incrementing output 0 value by 1 on chain ${c}`)
@@ -159,24 +163,9 @@ for (let c = 0; c < 10; c++) {
     }
     // console.log(outputs)
 
-    // build rollovers
-    // console.log(`building rollovers on chain ${c}`)
-    let inMod = { index: 1, subtrahend: parseEther('0.5') }
-    let reqMods = [{ index: 0, subtrahend: parseEther('0.495') }]
-    let rollovers = [{ inMod, reqMods }]
-    if (c == 8) {
-        console.log(`incrementing rollover 0 inMod subtrahend by 1 on chain ${c}`)
-        rollovers[0].inMod.subtrahend = rollovers[0].inMod.subtrahend.add(1)
-    }
-    if (c == 9) {
-        console.log(`decrementing rollover 0 inMod subtrahend by 1 on chain ${c}`)
-        rollovers[0].inMod.subtrahend = rollovers[0].inMod.subtrahend.sub(1)
-    }
-    // let rollovers = []
-
     // build streams
     // console.log(`building streams on chain ${c}`)
-    let streams = [{ inputs, proofs, outputs, rollovers, chain: 1 }]
+    let streams = [{ requests, proofs, outputs, chain: 1 }]
 
     // build works
     // console.log(`building works on chain ${c}`)
@@ -262,33 +251,27 @@ for (let c = 0; c < 10; c++) {
         console.log(`verifying invariants on chain ${c}`)
         // 225 in binary is 11100001, indicating that inputs 0, 5, 6, 7 were all set
         assert.equal((await tangle.chunks(0)).toString(), '225', 'chunks set correctly')
-        let recipient0Payment = outputs[0].value.mul(19).div(20)
-        let recipient1Payment = outputs[1].value.mul(19).div(20)
+        let recipient0Payment = outputs[0].value
+        let recipient1Payment = outputs[1].value
         assert.equal((await provider.getBalance(recipient0)).toString(), recipient0Payment.toString(), 'recipient0 balance')
         assert.equal((await provider.getBalance(recipient1)).toString(), recipient1Payment.toString(), 'recipient1 balance')
-        let sum_outputs = outputs.map(output => output.value).reduce((p, c) => p.add(c))
-        let executorPayment = sum_outputs.mul(3).div(20).div(4)
-        let worker0Payment = sum_outputs.mul(4096).div(22528).div(20).div(4)
-        let worker1Payment = sum_outputs.mul(2048).div(22528).div(20).div(4)
-        let worker2Payment = sum_outputs.mul(16384).div(22528).div(20).div(4).add(executorPayment)
-        assert.equal(worker0Payment.toString(), (await provider.getBalance(workers[0].address)).toString(), 'worker 0 payment')
-        assert.equal(worker1Payment.toString(), (await provider.getBalance(workers[1].address)).toString(), 'worker 1 payment')
-        assert.equal(worker2Payment.toString(), (await provider.getBalance(workers[2].address)).toString(), 'worker 2 payment')
-        let allInputsValue = allInputs.slice(0, 8).map(input => input.value).reduce((c, p) => p.add(c))
-        let tangleBalance = allInputsValue.sub(worker0Payment).sub(worker1Payment).sub(worker2Payment).sub(recipient0Payment).sub(recipient1Payment)
+        let allRequestsValue = allRequests.slice(0, 8).map(request => request.input).reduce((c, p) => p.add(c))
+        let tangleBalance = allRequestsValue.sub(recipient0Payment).sub(recipient1Payment)
         assert.equal((await provider.getBalance(tangle.address)).toString(), tangleBalance.toString(), 'tangle balance')
-        let totalGas = inputs.map(input => input.gas).reduce((p, c) => p.add(c))
-        let totalWork = inputs.map(input => input.work).reduce((p, c) => p.add(c))
-        let executorPoints = BigNumber.from(22528).mul(3).mul(totalGas).div(totalWork)
+        let totalGas = requests.map(request => request.gas).reduce((p, c) => p.add(c))
+        let totalWork = BigNumber.from(4096).add(2048).add(16384).add(1024)
+        let maxInputWork = requests.map(request => request.work).reduce((p, c) => c.gt(p) ? c : p)
+        console.log(`totalGas ${totalGas}`)
+        console.log(`totalWork ${totalWork}`)
+        console.log(`maxInputWork ${maxInputWork}`)
         let worker0Points = BigNumber.from(4096).mul(totalGas).div(totalWork)
         let worker1Points = BigNumber.from(2048).mul(totalGas).div(totalWork)
-        let worker2Points = BigNumber.from(16384).mul(totalGas).div(totalWork).add(executorPoints)
-        assert.equal((await tangle.accounts('GentleMidnight', workers[0].address)).P.toString(), worker0Points.toString(), 'worker 0 points')
-        assert.equal((await tangle.accounts('GentleMidnight', workers[1].address)).P.toString(), worker1Points.toString(), 'worker 1 points')
-        assert.equal((await tangle.accounts('GentleMidnight', workers[2].address)).P.toString(), worker2Points.toString(), 'worker 2 points')
-        await new Promise(_ => setTimeout(_, 1000))
-        // console.log(allInputs)
-        assert.equal(allInputs[allInputs.length - 1].value.toString(), inputs[1].value.sub(parseEther('0.5')).toString(), 'rollover value')
+        let worker2Points = BigNumber.from(16384).mul(totalGas).div(totalWork)
+        let worker3Points = BigNumber.from(1024).mul(totalGas).div(totalWork)
+        assert.equal((await tangle.accs(FarmID.MINE, workers[0].address)).points.toString(), worker0Points.toString(), 'worker 0 points')
+        assert.equal((await tangle.accs(FarmID.MINE, workers[1].address)).points.toString(), worker1Points.toString(), 'worker 1 points')
+        assert.equal((await tangle.accs(FarmID.MINE, workers[2].address)).points.toString(), worker2Points.toString(), 'worker 2 points')
+        assert.equal((await tangle.accs(FarmID.MINE, workers[3].address)).points.toString(), worker3Points.toString(), 'worker 3 points')
     } else {
         // other chains logic
         console.log(`verifying execute failure on chain ${c}`)
