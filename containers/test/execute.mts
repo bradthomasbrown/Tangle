@@ -1,4 +1,4 @@
-import { parseEther } from '@ethersproject/units'
+import { formatEther, parseEther, parseUnits } from '@ethersproject/units'
 import { keccak256 } from '@ethersproject/keccak256'
 import { defaultAbiCoder } from '@ethersproject/abi'
 import { JsonRpcProvider, WebSocketProvider } from '@ethersproject/providers'
@@ -13,6 +13,7 @@ enum FarmID {
     AIRDROP,
     STAKE,
     MINE,
+    ROLL
 }
 
 let cluster = new Cluster(0)
@@ -25,10 +26,11 @@ for (let c = 0; c < 10; c++) {
     let { tangle } = chain.contracts
     let owner = chain.wallet
     let executor = Wallet.createRandom().connect(provider)
-    let t_request = `tuple(address sender, uint gas, uint work, uint source, uint dest, uint input, uint output, uint id)`
+    let t_req = `tuple(address sender, uint gas, uint work, uint source, uint dest, uint input, uint output, uint id)`
     let t_proof = `tuple(bytes32[] hashes, uint index, uint subtree)`
+    let t_input = `tuple(${t_req} req, ${t_proof} proof, uint subtrahend, uint newOutput)`
     let t_output = `tuple(address recipient, uint value)`
-    let t_stream = `tuple(${t_request}[] requests, ${t_proof}[] proofs, ${t_output}[] outputs, uint chain)`
+    let t_stream = `tuple(${t_input}[] inputs, ${t_output}[] outputs, uint chain)`
     let t_work = `tuple(bytes32 root, address worker, uint n)`
 
     let db = new Level(`db${c}`)
@@ -73,6 +75,7 @@ for (let c = 0; c < 10; c++) {
         let thunk = getSubtrees([id], exchangeCount)
         while (typeof thunk == 'function') thunk = thunk()
         let subtrees = thunk
+        console.log(`id ${id} subtrees ${subtrees}`)
         let subtree = subtrees[0]
         if (subtree == 0) return { hashes: [], index: 0, subtree: 0 }
         let index = id % 2 ** subtree
@@ -82,33 +85,43 @@ for (let c = 0; c < 10; c++) {
     }
     let allRequests = []
     let handleExchange = async (input: any) => { 
-        await db.put(input.id.toString(), keccak256(defaultAbiCoder.encode([t_request], [input])))
+        await db.put(input.id.toString(), keccak256(defaultAbiCoder.encode([t_req], [input])))
         if (allRequests.push(input) == exchangeCount) finish()
     }
-    tangle.on('NewRequest', handleExchange)
+    tangle.on('NewReq', handleExchange)
 
-    // create requests
+    // create request with exchangeCount subreqs
+    let subreqs = []
+    let inputSum = undefined
+    let gasSum = undefined
     for (let i = 0; i < exchangeCount; i++) {
         console.log(`creating request ${i} on chain ${c}`)
         // randomize exchange parameters
         let work = parseInt(String(Math.random() * (10000 + 1) + 10000))
-        let output = `${String((Math.random() * 2 - 1) * 0.01 + 0.95).substring(0,11)}${String(Math.random()).substring(2,11)}`
+        let output = parseEther(`${String((Math.random() * 2 - 1) * 0.01 + 0.95).substring(0,11)}${String(Math.random()).substring(2,11)}`)
         let gas = parseInt(String(Math.random() * (100000 - 100 + 1) + 100))
-        let input = `${String((Math.random() * 2 - 1) * 0.01 + 1).substring(0,11)}${String(Math.random()).substring(2,11)}`
+        let input = parseEther(`${String((Math.random() * 2 - 1) * 0.01 + 1).substring(0,11)}${String(Math.random()).substring(2,11)}`)
+        gasSum = gasSum ? gasSum + gas : gas
+        inputSum = inputSum ? inputSum.add(input) : input
         let dest = '8002'
-        // create random wallet
-        let wallet = Wallet.createRandom().connect(provider)
-        // switch context to owner
-        tangle = tangle.connect(owner)
-        // send TNGL gas money to random wallet
-        await (await tangle.transfer(wallet.address, gas, { gasPrice: 0, gasLimit: 250000 })).wait()
-        // switch context to random wallet
-        tangle = tangle.connect(wallet)
-        // send spending ETH to random wallet
-        await drink.bind(chain)(wallet.address, input)
-        // exchange
-        await (await tangle.trade(gas, work, dest, parseEther(output), { value: parseEther(input), gasPrice: 0, gasLimit: 250000 })).wait()
+        subreqs.push({ gas, work, dest, input, output })
     }
+    // create random wallet
+    let wallet = Wallet.createRandom().connect(provider)
+    // switch context to owner
+    tangle = tangle.connect(owner)
+    // send TNGL gas money to random wallet
+    console.log(`transferring ${gasSum + 1} tangle to wallet ${wallet.address}`)
+    await (await tangle.transfer(wallet.address, gasSum + 1, { gasPrice: 0, gasLimit: 250000 })).wait()
+    // switch context to random wallet
+    tangle = tangle.connect(wallet)
+    // send spending ETH to random wallet
+    console.log(`obtaining ${formatEther(String(inputSum))} ether from faucet`)
+    await drink.bind(chain)(wallet.address, formatEther(String(inputSum)))
+    // exchange
+    console.log(`submitting trade with msgValue of ${inputSum}`)
+    await (await tangle.trade(subreqs, { value: inputSum, gasPrice: 0, gasLimit: 250000 })).wait()
+
     // switch context to executor
     tangle = tangle.connect(executor)
 
@@ -132,12 +145,23 @@ for (let c = 0; c < 10; c++) {
         request.input = request.input.add(1)
         requests[0] = request
     }
+    let inputs = requests.map(request => {
+        return {
+            req: request,
+            proof: undefined,
+            subtrahend: BigNumber.from(0),
+            newOutput: '0'
+        }
+    })
+    inputs[3].subtrahend = parseEther('0.7')
+    inputs[3].newOutput = '12345'
     // console.log(inputs)
     // console.log(inputs.map(input => keccak256(defaultAbiCoder.encode([t_input], [input]))))
 
     // build inputProofs
-    // console.log(`building input proofs on chain ${c}`)
+    console.log(`building input proofs on chain ${c}`)
     let proofs = await Promise.all(requests.map(async request => proof(parseInt(String(request.id)))))
+    for (let i = 0; i < inputs.length; i++) inputs[i].proof = proofs[i]
     if (c == 2) {
         console.log(`incrementing proof 0 hash 0 by 1 on chain ${c}`)
         proofs[0].hashes[0] = `0x${(BigInt(proofs[0].hashes[0]) + 1n).toString(16).padStart(64, '0')}`
@@ -146,7 +170,7 @@ for (let c = 0; c < 10; c++) {
 
     // build outputs
     // console.log(`building outputs on chain ${c}`)
-    let requestInputs = requests.map(request => request.input).reduce((p, c) => p.add(c))
+    let requestInputs = requests.map(request => request.input).reduce((p, c) => p.add(c)).sub(parseEther('0.7'))
     let recipient0 = Wallet.createRandom().address
     let recipient1 = Wallet.createRandom().address
     let outputs = [
@@ -165,10 +189,13 @@ for (let c = 0; c < 10; c++) {
 
     // build streams
     // console.log(`building streams on chain ${c}`)
-    let streams = [{ requests, proofs, outputs, chain: 1 }]
+    // if no chains in streams equal execute()'s chain id, it will use the first available chain
+    // so we can set it to 0 here event if the chain we're submitting to isn't chain.id = 0
+    let streams = [{ inputs, outputs, chain: 0 }]
 
     // build works
     // console.log(`building works on chain ${c}`)
+    console.log('encoding and hashing streams')
     let streamsHash = keccak256(defaultAbiCoder.encode([`${t_stream}[]`], [streams]))
     // console.log('STREAMSHASH')
     // console.log(streamsHash)
@@ -241,7 +268,8 @@ for (let c = 0; c < 10; c++) {
     // chain 1 execute logic
     if (c == 0) {
         console.log(`submitting execution on chain ${c}`)
-        await (await tangle.execute(...args, { gasPrice: 0, gasLimit: 1000000 })).wait()
+        let tx = await (await tangle.execute(...args, { gasPrice: 0, gasLimit: 1000000 })).wait()
+        console.log(`${tx.cumulativeGasUsed}`)
 
         // verify that resubmitting throws error
         console.log(`verifying execute resubmit fails on chain ${c}`)
@@ -258,20 +286,44 @@ for (let c = 0; c < 10; c++) {
         let allRequestsValue = allRequests.slice(0, 8).map(request => request.input).reduce((c, p) => p.add(c))
         let tangleBalance = allRequestsValue.sub(recipient0Payment).sub(recipient1Payment)
         assert.equal((await provider.getBalance(tangle.address)).toString(), tangleBalance.toString(), 'tangle balance')
-        let totalGas = requests.map(request => request.gas).reduce((p, c) => p.add(c))
+        let reqGas = inputs.map(input => input.req.gas).reduce((p, c) => p.add(c))
+        let totalGas = inputs.reduce((p, input) => {
+            let { req } = input
+            return p.add(req.gas.mul(req.input.sub(input.subtrahend)).div(req.input))
+        }, BigNumber.from(0))
+        let totalRollGas = inputs.reduce((p, input) => {
+            let { req } = input
+            return p.add(req.gas.sub(req.gas.mul(req.input.sub(input.subtrahend)).div(req.input)))
+        }, BigNumber.from(0))
         let totalWork = BigNumber.from(4096).add(2048).add(16384).add(1024)
         let maxInputWork = requests.map(request => request.work).reduce((p, c) => c.gt(p) ? c : p)
+        console.log(`reqGas ${reqGas}`)
         console.log(`totalGas ${totalGas}`)
+        console.log(`totalRollGas ${totalRollGas}`)
         console.log(`totalWork ${totalWork}`)
         console.log(`maxInputWork ${maxInputWork}`)
         let worker0Points = BigNumber.from(4096).mul(totalGas).div(totalWork)
         let worker1Points = BigNumber.from(2048).mul(totalGas).div(totalWork)
         let worker2Points = BigNumber.from(16384).mul(totalGas).div(totalWork)
         let worker3Points = BigNumber.from(1024).mul(totalGas).div(totalWork)
+        console.log(`worker0Points ${worker0Points}`)
+        console.log(`worker1Points ${worker1Points}`)
+        console.log(`worker2Points ${worker2Points}`)
+        console.log(`worker3Points ${worker3Points}`)
+        assert.equal((await tangle.farms(FarmID.MINE)).points.toString(), worker0Points.add(worker1Points).add(worker2Points).add(worker3Points).toString(), 'farm mine points')
         assert.equal((await tangle.accs(FarmID.MINE, workers[0].address)).points.toString(), worker0Points.toString(), 'worker 0 points')
         assert.equal((await tangle.accs(FarmID.MINE, workers[1].address)).points.toString(), worker1Points.toString(), 'worker 1 points')
         assert.equal((await tangle.accs(FarmID.MINE, workers[2].address)).points.toString(), worker2Points.toString(), 'worker 2 points')
         assert.equal((await tangle.accs(FarmID.MINE, workers[3].address)).points.toString(), worker3Points.toString(), 'worker 3 points')
+        let worker0RollPoints = BigNumber.from(4096).mul(totalRollGas).div(totalWork)
+        let worker1RollPoints = BigNumber.from(2048).mul(totalRollGas).div(totalWork)
+        let worker2RollPoints = BigNumber.from(16384).mul(totalRollGas).div(totalWork)
+        let worker3RollPoints = BigNumber.from(1024).mul(totalRollGas).div(totalWork)
+        assert.equal((await tangle.farms(FarmID.ROLL)).points.toString(), worker0RollPoints.add(worker1RollPoints).add(worker2RollPoints).add(worker3RollPoints).toString(), 'farm Roll points')
+        assert.equal((await tangle.accs(FarmID.ROLL, workers[0].address)).points.toString(), worker0RollPoints.toString(), 'worker 0 Roll points')
+        assert.equal((await tangle.accs(FarmID.ROLL, workers[1].address)).points.toString(), worker1RollPoints.toString(), 'worker 1 Roll points')
+        assert.equal((await tangle.accs(FarmID.ROLL, workers[2].address)).points.toString(), worker2RollPoints.toString(), 'worker 2 Roll points')
+        assert.equal((await tangle.accs(FarmID.ROLL, workers[3].address)).points.toString(), worker3RollPoints.toString(), 'worker 3 Roll points')
     } else {
         // other chains logic
         console.log(`verifying execute failure on chain ${c}`)

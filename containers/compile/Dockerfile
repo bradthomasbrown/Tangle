@@ -20,4 +20,3 @@ COPY --from=s818 /usr/bin/solc /usr/bin/s818
 WORKDIR /app/containers/compile
 COPY lib lib
 COPY json json
-CMD lib/compile tangle weth factory router

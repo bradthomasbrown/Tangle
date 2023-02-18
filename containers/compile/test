@@ -11,6 +11,6 @@ docker run \
     -v ~/Tangle/contracts:/app/contracts:ro \
     -v ~/Tangle/containers/test/pipe:/app/containers/compile/test \
     -v ~/tmp:/tmp \
-    -d \
+    -it \
     compile \
-    lib/compile tangle weth factory router
+    /bin/sh -c 'echo -e "$(lib/compile2.mjs | s818 --standard-json | jq ".errors[0].formattedMessage")"'

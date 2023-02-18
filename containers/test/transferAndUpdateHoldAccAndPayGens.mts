@@ -44,9 +44,9 @@ assert.equal((await tangle.accs(FarmID.HOLD, B)).points.toString(), '0', 'transf
 assert.equal((await tangle.farms(FarmID.HOLD)).points.toString(), '0', 'transfer init hold points')
 
 // updateHoldAcc A, attempt updateHoldAcc tangle.address
-await (await tangle.updateHoldAcc(A, { gasPrice: 0, gasLimit: 500000 })).wait()
+await (await tangle.updateHoldAcc([A, tangle.address], { gasPrice: 0, gasLimit: 500000 })).wait()
 assert.equal((await tangle.accs(FarmID.HOLD, A)).points.toString(), '100000000000000000', 'init A updateHoldAcc')
-assert.equal(await (await tangle.updateHoldAcc(tangle.address, { gasPrice: 0, gasLimit: 500000 })).wait().catch((reason: any) => { return reason }) instanceof Error, true, 'updateHoldAcc tangle fail')
+assert.equal((await tangle.accs(FarmID.HOLD, tangle.address)).points.toString(), '0', 'init tangle.address updateHoldAcc')
 
 // transfer 1E16 from A to B
 await (await tangle.transfer(B, 10000000000000000n, { gasPrice: 0, gasLimit: 500000 })).wait()
@@ -73,7 +73,7 @@ assert.equal((await tangle.accs(FarmID.HOLD, router.address)).points.toString(),
 assert.equal((await tangle.farms(FarmID.HOLD)).points.toString(), '100000000000000000', 'A to router hold points')
 
 // updateHoldAcc B
-await (await tangle.updateHoldAcc(B, { gasPrice: 0, gasLimit: 500000 })).wait()
+await (await tangle.updateHoldAcc([B], { gasPrice: 0, gasLimit: 500000 })).wait()
 assert.equal((await tangle.accs(FarmID.HOLD, A)).points.toString(), '100000000000000000', 'A mid updateHoldAcc')
 assert.equal((await tangle.accs(FarmID.HOLD, B)).points.toString(), '10000000000000000', 'B mid updateHoldAcc')
 assert.equal((await tangle.farms(FarmID.HOLD)).points.toString(), '110000000000000000', 'mid hold points')
@@ -102,8 +102,7 @@ assert.equal((await tangle.accs(FarmID.HOLD, B)).points.toString(), '10000000000
 assert.equal((await tangle.farms(FarmID.HOLD)).points.toString(), '110000000000000000', 'final hold points')
 
 // updateHoldAcc A, B
-await (await tangle.updateHoldAcc(A, { gasPrice: 0, gasLimit: 500000 })).wait()
-await (await tangle.updateHoldAcc(B, { gasPrice: 0, gasLimit: 500000 })).wait()
+await (await tangle.updateHoldAcc([A, B], { gasPrice: 0, gasLimit: 500000 })).wait()
 assert.equal((await tangle.accs(FarmID.HOLD, A)).points.toString(), '1', 'final udpateHoldAcc A')
 assert.equal((await tangle.accs(FarmID.HOLD, B)).points.toString(), '69999999999999999', 'final udpateHoldAcc B')
 assert.equal((await tangle.farms(FarmID.HOLD)).points.toString(), '70000000000000000', 'final udpateHoldAcc points')
