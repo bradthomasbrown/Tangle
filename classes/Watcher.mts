@@ -6,9 +6,9 @@ import chains from '../json/chains.json' assert { type: "json" }
 import { AbiCoder } from "@ethersproject/abi"
 import { Synchronizer } from "./Synchronizer.mjs"
 import { Level } from "level"
+import { LevelArray } from "./index.mjs"
 
-let tSubex = `tuple(uint input, uint chain, uint output)`
-let tInput = `tuple(uint work, ${tSubex}[] subexs, address sender, uint value, uint gas, uint id)`
+let t_Req = `tuple(address sender, uint gas, uint work, uint source, uint dest, uint input, uint output, uint id)`
 
 let coerceFunc = (type: string, value: any) => {
     if (value instanceof BigNumber) return BigInt(String(value))
@@ -24,99 +24,117 @@ let replacer = (_key: string, value: any) => typeof value == 'bigint' ? `0x${val
 
 export class Watcher {
 
-    provider: JsonRpcProvider
-    tangle: Contract
-    scanTo: number
-    filter: EventFilter
-    levelChain: LevelChain
-    chain: { [key: string]: any }
     sync: Synchronizer
-    conf: { [key: string]: any }
-    handleOpenChange: (chain: string, open: string[]) => void
+    initialized: Promise<void>
+    open: LevelArray
+    args: { [key: string]: any }
     
-    constructor(
-        level: Level, 
-        chain: string, 
-        conf: { [key: string]: any },
-        handleOpenChange: (chain: string, open: string[]) => void
-    ) {
-        this.handleOpenChange = handleOpenChange
-        this.levelChain = new LevelChain(level, chain)
-        this.conf = conf
-        this.chain = chains[chain]
-        let url = this.chain.rpcUrls[0]
-        this.provider = new JsonRpcProvider(url)
+    constructor(args: { [key: string]: any }) {
+        this.args = args
+        let { watchList } = args.conf
+        this.sync = new Synchronizer({ open: null })
+        watchList.forEach((chainid: string) => {
+            this.initialize(chainid)
+        })
+    }
+
+    async initialize(chainid: string) {
+        let { db } = this.args
+        let chain = chains[chainid]
+        let { rpcUrls, deployBlock } = chain
+        let rpcUrl = rpcUrls[0]
+        let provider = new JsonRpcProvider(rpcUrl)
         let { address, abi } = tnglJson
-        this.tangle = new Contract(address, abi, this.provider)
-        this.filter = ['Execute', 'Exchange']
-            .map(name => this.tangle.filters[name]())
-            .map(filter => { return { address: filter.address, topics: [filter.topics.flat()] }})
-            .reduce((p, c) => { return { address: c.address, topics: [[...p.topics[0], ...c.topics[0]]] }})
-        this.sync = new Synchronizer({ [`${chain}.open`]: null })
-        this.initialize()
+        let tangle = new Contract(address, abi, provider)
+        let scanTo = await provider.getBlockNumber()
+        let unknownStr = await db.get(`${chainid}.unknown`)
+            .catch((_reason: any) => { return undefined })
+        if (!unknownStr) {
+            await db.put(`${chainid}.unknown`, `${deployBlock}`)
+            unknownStr = `${deployBlock}`
+        }
+        let unknown = parseInt(unknownStr)
+        if (unknown < scanTo) this.catchUp(chainid, tangle, unknown, scanTo)
+        else {
+            console.log(`chain ${chainid} caught up`)
+            provider.on('block', (block: any) => 
+                this.handleBlock(chainid, block))
+        }
     }
 
-    async initialize() {
-        let { provider, tangle, filter } = this
-        tangle.on(filter, (event: Event) => this.handleEvent(event))
-        this.scanTo = await provider.getBlockNumber()
-        this.catchUp()
-    }
-
-    async catchUp() {
-        let { conf } = this
-        let { thunkDelay } = conf
-        let thunk = await this.scanChunk()
+    async catchUp(chainid: string, tangle: Contract, unknown: number, 
+    scanTo: number) {
+        let { thunkDelay } = this.args.conf
+        let { provider } = tangle
+        let thunk = await this.scanChunk(tangle, unknown, scanTo)
         while (typeof thunk == 'function') {
             await new Promise(_ => setTimeout(_, thunkDelay))
             thunk = await thunk()
         }
-        this.provider.on('block', block => this.handleBlock(block))
-        console.log(`chain ${this.chain.id} caught up`)
+        provider.on('block', (block: any) => this.handleBlock(chainid, block))
+        console.log(`chain ${chainid} caught up`)
     }
 
-    async scanChunk() {
-        let { levelChain, scanTo, filter, conf } = this
+    async scanChunk(tangle: Contract, unknown: number, scanTo: number) {
+        let { conf, db } = this.args
         let { batchSize } = conf
-        let fromBlock = await levelChain.unknown
-        let toBlock = Math.min(scanTo, fromBlock + batchSize)
-        let result: Error | Event[] = await this.tangle.queryFilter(filter, fromBlock, toBlock)
+        let toBlock = Math.min(scanTo, unknown + batchSize)
+        let network = await tangle.provider.getNetwork()
+        let chainidInt = network.chainId
+        let chainid = `0x${chainidInt.toString(16)}`
+        let filter = ['Execute', 'NewReq']
+            .map(name => tangle.filters[name]())
+            .map(filter => { return { address: filter.address, topics: [filter.topics.flat()] }})
+            .reduce((p, c) => { return { address: c.address, topics: [[...p.topics[0], ...c.topics[0]]] }})
+        let result: Error | Event[] = await tangle
+            .queryFilter(filter, unknown, toBlock)
             .catch((error: Error) => { return error })
-        if (result instanceof Error) return this.handleScanChunkError(result) 
-        else result.forEach(event => this.handleEvent(event))
-        levelChain.unknown = toBlock + 1
-        if (toBlock < scanTo) return () => this.scanChunk()
+        if (result instanceof Error)
+            return () => this.scanChunk(tangle, unknown, scanTo)
+        else result.forEach(event => this.handleEvent(tangle, event))
+        unknown = toBlock + 1
+        await db.put(`${chainid}.unknown`, `${toBlock + 1}`)
+        if (toBlock < scanTo) 
+            return () => this.scanChunk(tangle, unknown, scanTo)
         else return null
     }
 
-    handleScanChunkError(error: Error) {
-        console.log(error)
-        return () => this.scanChunk()
-    }
-
-    async handleEvent(event: Event) {
-        let { tangle } = this
+    async handleEvent(tangle: Contract, event: Event) {
+        let { sync } = this
         if (event.topics[0] == tangle.filters['Execute']().topics[0]) this.handleExecute(event)
-        if (event.topics[0] == tangle.filters['Exchange']().topics[0]) this.handleExchange(event)
+        if (event.topics[0] == tangle.filters['NewReq']().topics[0]) {
+            let fn = async () => this.handleExchange(event);
+            await sync.exec(fn, 'open')
+        }
     }
 
     async handleExchange(event: Event) {
-        let { levelChain, chain, sync } = this
-        let { open } = levelChain
+        let { db, updateReqs } = this.args
         let { data } = event
-        let input = abiCoder.decode([tInput], data)
+        let input = abiCoder.decode([t_Req], data)
         let inputJson = JSON.stringify(input, replacer)
-        await sync.exec(open.push.bind(open), `${chain.id}.open`, inputJson)
-        this.handleOpenChange(chain.id, await open.all())
+        let lengthStr = await db.get('open.length')
+            .catch((_reason: any) => { return undefined })
+        if (!lengthStr) {
+            await db.put('open.length', '0')
+            lengthStr = '0'
+        }
+        let key = `open[${lengthStr}]`
+        await db.put(key, inputJson)
+        lengthStr = String(parseInt(lengthStr) + 1)
+        await db.put('open.length', lengthStr)
+        let length = parseInt(lengthStr)
+        let range = Array.from({ length }, (_, i) => `open[${i}]`)
+        updateReqs(await db.getMany(range))
     }
 
-    async handleExecute(event: Event) {
+    async handleExecute(_event: Event) {
         console.log('handling execute')
     }
 
-    async handleBlock(block: number) {
-        let { levelChain } = this
-        levelChain.unknown = block + 1
+    async handleBlock(chainid: string, block: number) {
+        let { db } = this.args
+        await db.put(`${chainid}.unknown`, `${block + 1}`)
     }
 
 }
