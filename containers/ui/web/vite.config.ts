@@ -2,6 +2,8 @@ import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
 import { ethers, Wallet } from 'ethers5'
 import { JsonRpcProvider } from '@ethersproject/providers'
+import tnglJson from '/ui/json/tngl.json' assert { type: "json" }
+import chains  from '/ui/json/chains.json' assert { type: "json" }
 
 export default defineConfig({
     resolve: {
@@ -44,10 +46,6 @@ export default defineConfig({
                         )
                         let sender = queries.address
                         let { chain } = queries
-                        let tnglJsonPath = '/ui/json/tngl.json'
-                        let tnglJson = await import(tnglJsonPath, { assert: { type: "json" } })
-                        let chainsJsonPath = '/ui/json/chains.json'
-                        let chains = await import(chainsJsonPath, { assert: { type: "json" } })
                         let { Contract } = ethers
                         let { address, abi } = tnglJson
                         let rpcUrl = chains[String(chain)].rpcUrls[0]
