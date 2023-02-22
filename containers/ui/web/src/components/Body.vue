@@ -31,13 +31,15 @@ export default {
         async swap() {
             let work = 1000000000
             let gas = 1000000000
-            throw "FIX THIS"
-            let subexs = []
+            let input = this.input
+            let value = input
+            let subreqs = []
             for (let i = 0; i < this.selected.slice(1).length; i++) {
-                subexs.push({ chain: this.selected.slice(1)[i], value: this.outputs[i] })
+                let dest = this.selected.slice(1)[i]
+                let output = this.outputs[i]
+                subreqs.push({ gas, work, dest, input, output })
             }
-            let value = this.input
-            await this.tangle.exchange(work, subexs, gas, { value })
+            await this.tangle.trade(subreqs, { value })
         },
         async update() {
             let ethereum = window['ethereum']
