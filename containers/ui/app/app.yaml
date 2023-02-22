@@ -1,6 +1,6 @@
 default_expiration: '2s'
 runtime: nodejs18
 instance_class: B1
-manual_scaling:
-  instances: 1
+basic_scaling:
+  max_instances: 1
 entrypoint: node app.mjs
