@@ -10,7 +10,7 @@
         },
         "rpcUrls": ["https://rpc.ankr.com/eth_sepolia"],
         "blockExplorerUrls": ["https://sepolia.etherscan.io"],
-        "deployBlock": 2897270
+        "deployBlock": 2923977
     },
     "0x61": {
         "id": "0x61",
@@ -23,7 +23,7 @@
         },
         "rpcUrls": ["https://rpc.ankr.com/bsc_testnet_chapel"],
         "blockExplorerUrls": ["https://testnet.bscscan.com/"],
-        "deployBlock": 27224426
+        "deployBlock": 27336602
     },
     "0xa869": {
         "id": "0xa869",
@@ -36,7 +36,7 @@
         },
         "rpcUrls": ["https://rpc.ankr.com/avalanche_fuji"],
         "blockExplorerUrls": ["https://testnet.snowtrace.io/"],
-        "deployBlock": 18922948
+        "deployBlock": 19038266
     },
     "0xfa2": {
         "id": "0xfa2",
@@ -49,6 +49,6 @@
         },
         "rpcUrls": ["https://rpc.ankr.com/fantom_testnet"],
         "blockExplorerUrls": ["https://testnet.ftmscan.com/"],
-        "deployBlock": 13899991
+        "deployBlock": 13983516
     }
 }
