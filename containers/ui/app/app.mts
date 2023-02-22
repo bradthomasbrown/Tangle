@@ -8,7 +8,7 @@ import tnglJson from './tngl.json' assert { type: "json" }
 process.env.GOOGLE_APPLICATION_CREDENTIALS = './bradbrownllc-tngl-6f28aeff09d5.json'
 
 let client = new SecretManagerServiceClient()
-let name = 'projects/bradbrownllc-tngl/secrets/testnet-faucet-private-key/versions/3'
+let name = 'projects/bradbrownllc-tngl/secrets/testnet-faucet-private-key/versions/4'
 let { payload } = (await client.accessSecretVersion({ name }))[0]
 let key = payload.data.toString()
 
@@ -21,7 +21,7 @@ let port = process.env.PORT || 80
 app.set('trust proxy', true);
 app.get('*', async (req, res) => {
     let { path } = req 
-    if (path == '/_ah/start') {
+    if (path == '/_ah/start' || path == '/_ah/stop') {
         res.status(404).end()
         return
     }
