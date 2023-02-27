@@ -1,13 +1,28 @@
-import { randomBytes } from 'crypto'
+import { defaultAbiCoder } from '@ethersproject/abi'
+import { keccak256 } from '@ethersproject/keccak256'
+import { Wallet } from '@ethersproject/wallet'
 import { Level } from 'level'
 import { Watcher } from '../../classes/index.mjs'
 import conf from './conf.json' assert { type: "json" }
+import { Worker, isMainThread, parentPort } from 'worker_threads'
+import { fileURLToPath } from 'url'
 
-let selectionStrength = 0.9
-let mutationRate = 0.0025
-let desiredPopulation = 100
-let loggingInterval = 250
+let t_Req = `tuple(address sender, uint gas, uint work, uint source, uint dest, uint input, uint output, uint id)`
+let t_Proof = `tuple(bytes32[] hashes, uint index, uint subtree)`
+let t_Input = `tuple(${t_Req} req, ${t_Proof} proof, uint subtrahend, uint newOutput)`
+let t_Output = `tuple(address recipient, uint value)`
+let t_Stream = `tuple(${t_Input}[] inputs, ${t_Output}[] outputs, uint chain)`
+let t_Work = `tuple(bytes32 root, address worker, uint n)`
+
+if (isMainThread) {
+
+let desiredPopulation = 200
+let loggingInterval = null
 let cycleDelay = 0
+let maxWorkAmount = 10000000n
+let threads = 6
+
+let start = Date.now() / 1000
 
 let reviver = (key: any, value: any) => {
     switch (key) {
@@ -27,13 +42,8 @@ let randBigInt = (limit: bigint) => {
     if (limit < 0n) return 0n
     let fn = () => BigInt(randBitString(log2(limit) + 1))
     let rand = fn()
-    // let bar = 0
     while (rand > limit) {
         rand = fn()
-        // if (bar > 0 && bar % 10000 == 0) {
-        //     console.log('bar', limit)
-        // }
-        // bar++
     }
     return rand
 }
@@ -57,7 +67,6 @@ let randomSkewNormal = (ξ: number, ω: number, α = 0) => {
     const z = u0 >= 0 ? u1 : -u1;
     return ξ + ω * z;
 };
-// console.log('building fertilityLookup')
 let fertilityLookup = {}
 let rsn = () => Math.floor(randomSkewNormal(0, 10, 4)) + 18
 for (let i = 0; i < 1000000; i++) {
@@ -70,16 +79,13 @@ let mortalityLookup = {
     male: Array.from({ length: 100 }, (_, i) => (i / 10) ** 3 / 970.299),
     female: Array.from({ length: 120 }, (_, i) => (i / 10) ** 3 / 1685.159)
 }
-// console.log('building mutateLookup')
 let ψ = 1.0333
 let mutateLookup = Array.from({ length: 256 }, (_, i) => ψ ** i)
 let sum = mutateLookup.reduce((p, c) => p + c)
 mutateLookup = mutateLookup.map(e => e / sum)
 
-// console.log('opening db')
 let db = new Level('db')
 let reqStrs = []
-// console.log('getting existing open trades')
 let openLengthStr = await db.get('open.length')
     .catch((_reason: any) => { return undefined })
 if (openLengthStr) {
@@ -88,16 +94,175 @@ if (openLengthStr) {
     let values = await db.getMany(range)
     reqStrs.push(...values)
 }
-function updateReqs(_reqStrs: any) { reqStrs = _reqStrs; }
-// console.log('starting watcher')
+
+let iteration = 0
+function updateReqs(_reqStrs: any) {
+    reqStrs = _reqStrs;
+    iteration = 0
+}
 new Watcher({ db, conf, updateReqs })
-// console.log(reqStrs)
+
+let ruler = (x: number) => parseInt(String(Math.log2(x ^ x + 1)))
+let nextAdd = (x: number) => x + 2 ** ruler(x)
+let nextDel = (x: number) => x + 2 ** (ruler(x) + 1)
+let getSubtrees = (ids: number[], count: number) => {
+    let na = nextAdd(ids[ids.length - 1])
+    let nd = nextDel(ids[0])
+    if (na >= count && nd >= count) return ids.map(id => ruler(id))
+    if (na <= nd) ids.push(na)
+    else ids.shift()
+    return () => getSubtrees(ids, count)
+}
+let getTree = async (id: number, subtree: number, chain: string) => {
+    let tree = []
+    let index = id % 2 ** subtree
+    tree.push((await db.getMany(Array(2 ** subtree).fill(0).map((_e, i) => 
+        `${chain}[0x${(id - index + i).toString(16)}]`)))
+        .map(reqStr => JSON.parse(reqStr))
+        .map(req => defaultAbiCoder.encode([t_Req], [req]))
+        .map(encoding => keccak256(encoding)))
+    while (tree[tree.length - 1].length > 2) {
+        let tmp = [...tree[tree.length - 1]]
+        tree.push([])
+        while (tmp.length > 0) {
+            let foo = tmp.splice(0, 2)
+            tree[tree.length - 1].push(keccak256(`${foo[0]}${foo[1].substring(2)}`))
+        }
+    }
+    return tree
+}
+let buildProof = (index: number, tree: any[]) => {
+    let proof = []
+    for (let branch = 0; branch < tree.length; index = parseInt(String(index / 2)), branch++) {
+        let nodes = tree[branch]
+        proof.push(nodes[index + index % 2 * -2 + 1])
+    }
+    return proof
+}
+let getProof = async (chain: string, idStr: string) => {
+    let countStr = await db.get(`${chain}.length`)
+    let count = parseInt(countStr)
+    let id = parseInt(idStr)
+    let thunk = getSubtrees([id], count)
+    while (typeof thunk == 'function') thunk = thunk()
+    let subtrees = thunk
+    let subtree = subtrees[0]
+    if (subtree == 0) return { hashes: [], index: 0, subtree: 0 }
+    let index = id % 2 ** subtree
+    let tree = await getTree(id, subtree, chain)
+    let proof = buildProof(index, tree)
+    return { hashes: proof, index: id % 2 ** subtree, subtree: subtree }
+}
+let getStreams = async (trade: any) => {
+    let streams = []
+    let genes = Object.entries(trade.genes)
+    let outputsObj = {}
+    for (let i = 0; i < genes.length; i++) {
+        let gene = genes[i]
+        let chain = gene[0]
+        let inputs = []
+        let data = Object.entries(gene[1])
+        for (let j = 0; j < data.length; j++) {
+            let datum = data[j]
+            if (!datum[0].match('0x')) continue
+            let id = datum[0]
+            let req = JSON.parse(await db.get(`${chain}[${id}]`), reviver)
+            let { output, dest, sender } = req
+            let proof = await getProof(chain, id)
+            let subtrahend = BigInt(datum[1])
+            let newOutput = output * (req.input - subtrahend) / req.input
+            let input = { req, proof, subtrahend, newOutput }
+            inputs.push(input)
+            if (!outputsObj[`${dest}:${sender}`]) 
+                outputsObj[`${dest}:${sender}`] = 0n
+            outputsObj[`${dest}:${sender}`] += 
+                output * (req.input - subtrahend) / req.input
+        }
+        let outputs = []
+        let stream = { inputs, outputs, chain }
+        streams.push(stream)
+    }
+    Object.entries(outputsObj).forEach(entry => {
+        let [dest, recipient] = entry[0].split(':')
+        let value = entry[1]
+        if (value == 0n) return
+        let destStreams = streams.filter(stream => stream.chain == dest)
+        if (destStreams.length == 0) return
+        let stream = destStreams[0]
+        stream.outputs.push({ recipient, value })
+    })
+    return streams
+}
+
+let bestTrade = undefined
+let miningJob = { 
+    completionRate: 0,
+    streams: undefined,
+    works: [],
+    remainingWork: undefined
+}
+let updateBestTrade = async (individual: any) => {
+    console.log(`[${Date.now() / 1000 - start}]\tnew best fitness ${individual.fitness}`)
+    let { completionRate } = miningJob
+    if (bestTrade === undefined 
+    || individual.fitness > bestTrade.fitness * (1 - completionRate)) {
+        bestTrade = individual
+        let completionRate = 0
+        let works = []
+        let streams = await getStreams(bestTrade)
+        let remainingWork = streams.map(stream => 
+            stream.inputs.map((input: any) => input.req.work)
+            .reduce((p: any, c: any) => c > p ? c : p, 0n))
+            .reduce((p: any, c: any) => c > p ? c : p, 0n)
+        miningJob = { completionRate, streams, works, remainingWork }
+    }
+}
+let tsolv = async (W: { root: string, worker: string }, work: bigint) => {
+    W['n'] = 0n
+    let threadWorkers = []
+    W = await new Promise(_ => {
+        for (let i = 0; i < threads; i++) {
+            let threadNum = i
+            let threadWorker = new Worker(fileURLToPath(import.meta.url))
+            threadWorker.postMessage({ W, work, threadNum, threads })
+            threadWorker.on('message', (m: any) => _(m))
+            threadWorkers.push(threadWorker)
+        }
+    })
+    await Promise.all(threadWorkers.map(threadWorker =>
+            threadWorker.terminate()))
+    return W
+}
+let wallet = Wallet.createRandom()
+let worker = wallet.address
+let score = (hash: string) => 1n << BigInt(BigInt(hash).toString(2).padStart(256, '0').indexOf('1'))
+let mine = async () => {
+    let { streams, works, remainingWork } = miningJob
+    if (streams !== undefined) {
+        let streamsEncoding = defaultAbiCoder.encode([`${t_Stream}[]`], [streams])
+        let streamsHash = keccak256(streamsEncoding)
+        let root = works.length == 0 ? streamsHash : keccak256(defaultAbiCoder.encode([t_Work], [works[works.length - 1]]))
+        let workAmount = remainingWork > maxWorkAmount 
+            ? maxWorkAmount : remainingWork
+        let work = await tsolv({ root, worker: worker }, workAmount)
+        let workHash = keccak256(defaultAbiCoder.encode([t_Work], [work]))
+        let workScore = score(workHash)
+        miningJob.remainingWork -= workScore
+        miningJob.works.push(work)
+        console.dir(miningJob, { depth: Infinity })
+    }
+    if (miningJob.remainingWork <= 0n) {
+        console.log('mining complete!')
+    }
+    setImmediate(() => mine())
+}
+mine()
 
 let spawn = (args: any) => {
-    // console.log('begin')
     let { father, mother } = args
     let chains = {}
     let mutate = false
+    let mutationRate = 0.1 / Math.log(iteration)
     if (Math.random() < mutationRate) mutate = true
     reqStrs.map(reqStr => {
         let req = JSON.parse(reqStr, reviver)
@@ -105,9 +270,11 @@ let spawn = (args: any) => {
         let S = chains[source]
         let D = chains[dest]
         let subtrahend: bigint
-        if (father && mother) {
-            let fSub: bigint = father.genes[source][id]
-            let mSub: bigint = mother.genes[source][id]
+        if (father && mother && father.genes && mother.genes 
+        && father.genes[source] && mother.genes[source]
+        && father.genes[source][id] && mother.genes[source][id]) {
+            let fSub = father.genes[source][id]
+            let mSub = mother.genes[source][id]
             let α: bigint
             let β: bigint
             let x: any
@@ -123,18 +290,6 @@ let spawn = (args: any) => {
             let upper: bigint = ySub + (ySub - xSub) / β
             let range: bigint = upper - lower
             subtrahend = randBigInt(range) + lower
-            // console.log(`FSUB`, fSub)
-            // console.log(`MSUB`, mSub)
-            // console.log(`x.penalty`, x.penalty)
-            // console.log(`y.penalty`, y.penalty)
-            // console.log(`xSub`, xSub)
-            // console.log(`ySub`, ySub)
-            // console.log(`α`, α)
-            // console.log(`β`, β)
-            // console.log(`UPPER`, upper)
-            // console.log(`LOWER`, lower)
-            // console.log(`RANGE`, range)
-            // console.log(`SUBTRAHEND`, subtrahend)
         } else subtrahend = randBigInt(input)
         if (mutate) {
             let upper = subtrahend + subtrahend / 2n
@@ -158,7 +313,6 @@ let spawn = (args: any) => {
         if (!D['output']) D['output'] = 0
         D['output'] += parseFloat(`${effOutput}`)
     })
-    // console.log('')
     let penalty = Object.values(chains)
         .map((chain: any) => {
             let input = chain.input
@@ -173,103 +327,60 @@ let spawn = (args: any) => {
         .filter(chain => chain['effGas'])
         .map(chain => chain['effGas'])
         .reduce((p, c) => p + c, 0) * penalty
-    // Object.values(chains).forEach(chain => {
-    //     delete chain['effGas']
-    //     delete chain['output']
-    //     delete chain['input']
-    // }) 
     let age = 0
     let gender = Math.random() < 0.5 ? 'male' : 'female'
     if (args.gender) gender = args.gender
     let obj = { penalty, fitness, genes: chains, age, gender }
-    // if (adam) obj['immortal'] = true
-    // if (father && mother) {
-    //     console.log('father')
-    //     console.log(father)
-    //     console.log('mother')
-    //     console.log(mother)
-    //     console.log('child')
-    //     console.log(obj)
-    // }
-    // console.log('end')
+    if (penalty == 1 && 
+    (bestTrade === undefined || fitness > bestTrade.fitness))
+        updateBestTrade(obj)
     return obj
 }
 
-// console.log('initializing population')
-let population = []
-// population.push(spawn({ gender: 'male', adam: true }))
-population.push(spawn({ gender: 'male' }))
-population.push(spawn({ gender: 'female' }))
 
+let population = []
 let reproduce = (individual: any, newPop: any[]) => {
-    // console.log('reproduce')
-    let p = selectionStrength
-    // console.log('getSuitors')
+    let p = 1 - 1000 / (iteration + 1000)
     let suitors = population
         .filter(individual => individual.gender == 'male')
         .sort((a, b) => {
             return parseInt(`${b.fitness - a.fitness}`)
         })
-    if (suitors.length == 0) {
-        return
-    }
+    if (suitors.length == 0) return
     let suitor = undefined
-    // let foo = 0
-    // console.log('pickSuitor')
-    // console.log(suitors.length)
     while (!suitor) {
-        // console.log(`foo ${foo}`)
         for (let i = 0; i < suitors.length; i++)
             if (Math.random() < p * (1 - p) ** i) {
                 suitor = suitors[i]
                 break
             }
-        // console.log(`boo ${foo}`)
-        // if (foo % 100000 == 0 && foo > 0) {
-        //     console.log(suitors)
-        //     console.log(population)
-        // }
-        // foo++
     }
-    // console.log(`spawn`)
-    let child = spawn({ father: suitor, mother: individual })
-    // console.log(`fawn`)
-    newPop.push(child)
+    newPop.push(spawn({ father: suitor, mother: individual }))
 }
 
-// console.log('beginning logging cycle')
-let iteration = 0
-setInterval(() => {
-    let best = population.sort((a, b) => b.fitness - a.fitness)[0]
-    let { fitness, penalty } = best
-    let clearCommand = '\u001b[2J\u001b[0;0H'
-    process.stdout.write(`${clearCommand}fitness\t${fitness}\npenalty\t${penalty}\npop.len\t${population.length}\niter\t${iteration}\n${JSON.stringify(best, replacer, 4)}\n`)
-    // for (let j = 0; j < population.length; j++) {
-    //     let individual = population[j]
-    //     let { age, gender, fitness, invalid } = individual
-    //     let colorcode = gender == 'female' ? 95 : 96
-    //     let delimeter = j == population.length - 1 ? ']\n' : ','
-    //     let info = `\x1b[${colorcode}m${age}-${fitness}\x1b[0m${delimeter}`
-    //     process.stdout.write(`${info}`)
-    // }
-}, loggingInterval);
+if (loggingInterval != null)
+    setInterval(() => {
+        let best = population.sort((a, b) => b.fitness - a.fitness)[0]
+        let { fitness, penalty } = best || {}
+        // let clearCommand = '\u001b[2J\u001b[0;0H'
+        let clearCommand = ''
+        let bestStr = `${JSON.stringify(best, replacer, 4)}\n`
+        // let bestStr = ''
+        let mutationRate = 0.1 / Math.log2(iteration)
+        let selectionStrength = 1 - 1000 / (iteration + 1000)
+        process.stdout.write(`${clearCommand}fitness\t${fitness}\npenalty\t${penalty}\npop.len\t${population.length}\niter\t${iteration}\nmutate\t${mutationRate}\nselect\t${selectionStrength}\n${bestStr}`)
+    }, loggingInterval);
 
 let fn = async () => {
-    // console.log('fn')
     let newPop = []
-    // console.log('popLoop')
     population.forEach((individual: any, j, pop) => {
-        let { gender, age, immortal } = individual
-        // console.log('reproduceCheck')
+        let { gender, age } = individual
         if (gender == 'female') {
             let fertility = fertilityLookup[age]
             if (fertility === undefined) fertility = 0
             if (population.length < desiredPopulation) fertility = 1
-            // console.log(`fertility ${fertility}`)
             if (Math.random() < fertility) reproduce(individual, newPop)
-            // console.log('baz')
         }
-        // console.log('mortalityCheck')
         let mortality = mortalityLookup[gender][age]
         if (mortality === undefined) mortality = 1
         if (Math.random() < mortality
@@ -277,17 +388,54 @@ let fn = async () => {
             pop.splice(j, 1)
         individual.age++
     })
-    // console.log('popAdd')
     population = [...population, ...newPop]
-    // console.log('popEnforceMinSize')
-    if (population.filter(i => i.gender == 'male').length == 0)
-        population.push(spawn({ gender: 'male' }))
-    if (population.filter(i => i.gender == 'female').length == 0)
-        population.push(spawn({ gender: 'female' }))
+    if (reqStrs.length !== 0) {
+        if (population.filter(i => i.gender == 'male').length == 0)
+            population.push(spawn({ gender: 'male' }))
+        if (population.filter(i => i.gender == 'female').length == 0)
+            population.push(spawn({ gender: 'female' }))
+    }
     iteration++
-    // console.log('nextFn')
     if (cycleDelay !== 0) await new Promise(_ => setTimeout(_, cycleDelay))
     setImmediate(() => fn())
 }
-// console.log('starting genetic algorithm')
+// console.log(population)
 fn()
+
+} else {
+
+    parentPort.once('message', async m => {
+        let { W, work, threadNum, threads } = m
+
+        let cycle = 0
+        W['n'] += BigInt(threadNum)
+        let BI_threads = BigInt(threads);
+        
+        (async () => {
+            await new Promise(_ => setTimeout(_, 10000 / threads * threadNum))
+            setInterval(() => {
+                console.log(`thread ${threadNum} cycles ${cycle}`)
+            }, 10000)
+        })()
+
+        let score = (hash: string) => 1n << BigInt(BigInt(hash).toString(2).padStart(256, '0').indexOf('1'))
+        let solve = () => {
+            cycle++
+            let hash = keccak256(defaultAbiCoder.encode([t_Work], [W]))
+            if (score(hash) >= work) return W
+            else { W['n'] += BI_threads; return () => solve() }
+        }
+        let thunk = solve()
+        await new Promise(_ => {
+            let fn = () => {
+                if (typeof thunk != 'function') { _(null); return }
+                thunk = thunk()
+                setImmediate(fn)
+            }
+            fn()
+        })
+        console.log(`thread ${threadNum} finished`)
+        parentPort.postMessage(W)
+    })
+
+}
