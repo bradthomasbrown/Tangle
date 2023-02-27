@@ -113,18 +113,32 @@ export class Watcher {
         let { data } = event
         let input = abiCoder.decode([t_Req], data)
         let inputJson = JSON.stringify(input, replacer)
-        let lengthStr = await db.get('open.length')
+        let source = `0x${input.source.toString(16)}`
+        let id = `0x${input.id.toString(16)}`
+
+        let sourceLenStr = await db.get(`${source}.length`)
             .catch((_reason: any) => { return undefined })
-        if (!lengthStr) {
-            await db.put('open.length', '0')
-            lengthStr = '0'
+        if (!sourceLenStr) {
+            await db.put(`${source}.length`, '0')
+            sourceLenStr = '0'
         }
-        let key = `open[${lengthStr}]`
+        await db.put(`${source}[${id}]`, inputJson)
+        sourceLenStr = String(parseInt(sourceLenStr) + 1)
+        await db.put(`${source}.length`, sourceLenStr)
+
+        let openLenStr = await db.get('open.length')
+            .catch((_reason: any) => { return undefined })
+        if (!openLenStr) {
+            await db.put('open.length', '0')
+            openLenStr = '0'
+        }
+        let key = `open[${openLenStr}]`
         await db.put(key, inputJson)
-        lengthStr = String(parseInt(lengthStr) + 1)
-        await db.put('open.length', lengthStr)
-        let length = parseInt(lengthStr)
-        let range = Array.from({ length }, (_, i) => `open[${i}]`)
+        openLenStr = String(parseInt(openLenStr) + 1)
+        await db.put('open.length', openLenStr)
+
+        let openLen = parseInt(openLenStr)
+        let range = Array.from({ length: openLen }, (_, i) => `open[${i}]`)
         updateReqs(await db.getMany(range))
     }
 
