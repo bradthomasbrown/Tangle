@@ -1,0 +1,38 @@
+@use 'sass:color';
+
+@use '@material/theme/color-palette';
+
+// Svelte Colors! (Dark Theme)
+@use '@material/theme/index' as theme with (
+  $primary: color-palette.$pink-500,
+  $secondary: color.scale(#676778, $whiteness: -10%),
+  $surface: color.adjust(color-palette.$grey-900, $blue: +4),
+  $background: #000,
+  $error: color-palette.$red-700
+);
+
+@use '@smui/paper/mixins' as paper;
+@include paper.paper-color(
+  invalid,
+  theme.$red-700,
+  theme.accessible-ink-color(theme.$red-700)
+);
+
+html,
+body {
+  color: theme.$on-surface;
+  background: linear-gradient(
+    180deg, 
+    color-palette.$pink-900 -250%,
+    color-palette.$grey-900 100%
+  );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+a {
+  color: #40b3ff;
+}
+a:visited {
+  color: color.scale(#40b3ff, $lightness: -35%);
+}
