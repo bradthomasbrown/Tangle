@@ -5,7 +5,7 @@
     let input = `${subreq.input}`
     function handleInput() {
         try {
-            let valueStr = input
+            let valueStr = input.replace(/ /g, '')
             let index = valueStr.indexOf('.')
             let nodot = valueStr.replace('.', '')
             let value = BigInt(nodot) * 10n ** 18n
