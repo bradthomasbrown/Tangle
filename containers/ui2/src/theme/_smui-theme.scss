@@ -20,6 +20,10 @@
 
 html,
 body {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   color: theme.$on-surface;
   background: linear-gradient(
     180deg, 
@@ -28,6 +32,16 @@ body {
   );
   background-repeat: no-repeat;
   background-attachment: fixed;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 a {
