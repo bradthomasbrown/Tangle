@@ -1,8 +1,7 @@
 <script lang="ts">
     import { Web3 } from '../stores/Web3.mjs'
     import CircularProgress from '@smui/circular-progress'
-    // @ts-ignore
-    import chains from '../json/chains.json'
+    import chains from '../../../../json/chains.json'
     $: source = chains[$Web3.chainId]?.chainAbbreviation
         ?? $Web3.chainId
 </script>
