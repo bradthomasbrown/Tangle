@@ -1,127 +1,189 @@
 import { writable, get, type Writable } from 'svelte/store'
-// @ts-ignore
 import { browser } from '$app/environment'
-import { BrowserProvider, Contract, JsonRpcSigner } from 'ethers6'
-// @ts-ignore
-import { abi, address } from '../json/tngl.json'
-import { onDestroy } from 'svelte/internal'
+import { BrowserProvider, Contract, JsonRpcApiProvider, JsonRpcSigner } from 'ethers6'
+import { abi, address } from '../../../../json/tngl.json'
+import EventEmitter from 'events';
+
+interface MetamaskProvider extends EventEmitter {
+    request(request: {
+        method: string
+        params?: Array<any> | Record<string, any>
+    }): Promise<any>
+    chainId: string
+    selectedAddress: string
+}
+
+interface Web3Tx {
+    status?: string
+    data?: string
+}
 
 interface Web3 {
-    ethereum?: any;
-    selectedAddress?: string;
-    chainId?: string;
-    provider?: BrowserProvider;
-    signer?: JsonRpcSigner;
-    contracts?: { [key: string]: Contract };
-    balances?: { [key: string]:
-        { [key: string]: { balance?: bigint, timestamp?: Number } }};
-    block?: Number;
-    pendingTxs?: any[];
-    failedTxs?: any[];
-    successfulTxs?: any[];
+    ethereum?: MetamaskProvider
+    provider?: BrowserProvider
+    chainId?: string
+    selectedAddress?: string
+    block?: number
+    signer?: JsonRpcSigner
+    nonce?: bigint
+    tangle?: Contract
+    nativeBalance?: bigint | Error
+    tangleBalance?: bigint | Error
 }
-let Web3: Writable<Web3> = writable({});
-function assignToWeb3State(source: Web3) {
-    Web3.update(state => Object.assign(state, source))
+
+let Web3: Writable<Web3> = writable({})
+let pollId: NodeJS.Timer
+
+if (browser && window.ethereum) {
+    let ethereum: MetamaskProvider = window.ethereum
+    Web3 = writable({})
+    ethereum.on('chainChanged', onChainChanged)
+    ethereum.on('accountsChanged', onAccountsChanged)
+    init()
+
+    async function init() {
+        console.log('init')
+        let tmp = { ethereum: window.ethereum }
+        updateChainId(tmp)
+        updateSelectedAddress(tmp)
+        updateProvider(tmp)
+        await Promise.all([
+            updateBlock(tmp),
+            updateNativeBalance(tmp),
+            updateSigner(tmp)
+            .then(() => updateTangle(tmp))
+            .then(() => updateTangleBalance(tmp))
+        ])
+        pollId = setTimeout(poll, 1000)
+        Object.assign(tmp, { nonce: 0n })
+        Web3.set(tmp)
+    }
+
+    async function onChainChanged() {
+        console.log('onChainChanged')
+        let { ethereum, nonce, selectedAddress } = get(Web3)
+        let tmp = { ethereum, selectedAddress }
+        updateChainId(tmp)
+        updateProvider(tmp)
+        await Promise.all([
+            updateBlock(tmp),
+            updateNativeBalance(tmp),
+            updateSigner(tmp)
+            .then(() => updateTangle(tmp))
+            .then(() => updateTangleBalance(tmp))
+        ])
+        Object.assign(tmp, { nonce: ++nonce })
+        Web3.set(tmp)
+    }
+    
+    async function onAccountsChanged() {
+        console.log('onAccountsChanged')
+        let { ethereum, nonce, chainId } = get(Web3)
+        let tmp = { ethereum, chainId }
+        updateSelectedAddress(tmp)
+        updateProvider(tmp)
+        await Promise.all([
+            updateBlock(tmp),
+            updateNativeBalance(tmp),
+            updateSigner(tmp)
+            .then(() => updateTangle(tmp))
+            .then(() => updateTangleBalance(tmp))
+        ])
+        Object.assign(tmp, { nonce: ++nonce })
+        Web3.set(tmp)
+    }
+    
+    async function poll() {
+        console.log('poll')
+        let { ethereum, nonce, chainId, selectedAddress, provider, block,
+            tangle } = get(Web3)
+        let tmp: Web3 = { ethereum, chainId, selectedAddress, provider,
+            tangle }
+        let n = await provider?.getBlockNumber()
+        if (n === block || n === undefined) {
+            pollId = setTimeout(poll, 1000);
+            return
+        }
+        Object.assign(tmp, { block: n })
+        await Promise.all([
+            updateNativeBalance(tmp),
+            updateTangleBalance(tmp)
+        ])
+        if (tmp.tangleBalance instanceof Error
+        || tmp.nativeBalance instanceof Error) {
+            pollId = setTimeout(poll, 1000);
+            return
+        }
+        if (nonce != get(Web3).nonce) {
+            pollId = setTimeout(poll, 1000);
+            return
+        }
+        pollId = setTimeout(poll, 1000)
+        Object.assign(tmp, { nonce: ++nonce })
+        Web3.set(tmp)
+    }
+
+    function updateChainId(tmp: Web3) {
+        console.log('updateChainId')
+        Object.assign(tmp, { chainId: ethereum.chainId })
+    }
+
+    function updateSelectedAddress(tmp: Web3) {
+        console.log('updateSelectedAddress')
+        Object.assign(tmp, { selectedAddress: ethereum.selectedAddress })
+    }
+
+    function updateProvider(tmp: Web3) {
+        console.log('updateProvider')
+        Object.assign(tmp, { provider: new BrowserProvider(ethereum, 'any') })
+    }
+
+    async function updateBlock(tmp: Web3) {
+        console.log('updateBlock')
+        Object.assign(tmp, { block: await tmp.provider.getBlockNumber() })
+    }
+
+    async function updateNativeBalance(tmp: Web3) {
+        console.log('updateNativeBalance')
+        if (tmp.selectedAddress) Object.assign(tmp, { nativeBalance:
+            await tmp.provider.getBalance(tmp.selectedAddress)
+                .catch(() => { return new Error() })})
+    }
+
+    async function updateSigner(tmp: Web3) {
+        console.log('updateSigner')
+        Object.assign(tmp, { signer: tmp.selectedAddress
+            ? await tmp.provider.getSigner() : undefined })
+    }
+
+    async function updateTangle(tmp: Web3) {
+        console.log('updateTangle')
+        let tangle = new Contract(address, abi, tmp.signer ?? tmp.provider)
+        if (await tangle.getDeployedCode()) Object.assign(tmp, { tangle })
+    }
+
+    async function updateTangleBalance(tmp: Web3) {
+        console.log('updateTangleBalance')
+        if (tmp.selectedAddress) Object.assign(tmp, { tangleBalance:
+            await tmp.tangle?.balanceOf(tmp.selectedAddress,
+                { blockTag: 'latest'}).catch(() => { return new Error() })})
+    }
+
 }
-(async () => {
-    if (!browser) return
-    let { ethereum } = window
-    if (!ethereum) return
-    Web3.update(state => { state.ethereum = ethereum; return state })
-    ethereum.on('chainChanged', handleChainChanged)
-    ethereum.on('accountsChanged', handleAccountsChanged)
-    let { chainId, selectedAddress } = ethereum
-    assignToWeb3State({ chainId, selectedAddress })
-    updateProvider()
-    function handleChainChanged(chainId: string) {
-        assignToWeb3State({ chainId })
-        updateProvider()
-    }
-    function updateProvider() {
-        let provider = new BrowserProvider(ethereum)
-        assignToWeb3State({ provider })
-        updateSigner()
-        // updateBlock()
-    }
-    function handleAccountsChanged(selectedAddress: string) {
-        selectedAddress = selectedAddress[0]
-        assignToWeb3State({ selectedAddress })
-        updateSigner()
-    }
-    async function updateSigner() {
-        let { provider, selectedAddress } = get(Web3)
-        let signer = selectedAddress ? await provider.getSigner() : undefined
-        assignToWeb3State({ signer })
-        updateContracts()
-        // updateTangle()
-    }
-    async function updateContracts() {
-        let { provider, signer, contracts } = get(Web3)
-        if (!contracts) {
-            contracts = {}
-            assignToWeb3State({ contracts })
-        }
-        let tangle = new Contract(address, abi, signer ?? provider)
-        let code = await tangle.getDeployedCode()
-        if (!code || code === '0x') tangle = undefined
-        contracts.tangle = tangle
-        assignToWeb3State({})
-        updateBalances()
-    }
-    async function updateBalances() {
-        let { block, balances, contracts, selectedAddress,
-            provider } = get(Web3)
-        let network = await provider.getNetwork()
-            .catch(() => { return undefined })
-        if (network) {
-            let chainId = `0x${network.chainId.toString(16)}`
-            if (!balances) {
-                balances = {}
-                assignToWeb3State({ balances: {} })
-            }
-            if (!balances[chainId]) balances[chainId] = {}
-            if (!contracts) {
-                contracts = {}
-                assignToWeb3State({ contracts: {} })
-            }
-            Object.entries(contracts).forEach(async entry => {
-                let [name, contract] = entry
-                let contractBalance =
-                    await contract?.balanceOf(selectedAddress)
-                    .catch(() => { return undefined })
-                if (contractBalance !== undefined) {
-                    if (!balances[chainId][name]) balances[chainId][name] = {}
-                    balances[chainId][name].timestamp = block
-                    balances[chainId][name].balance = contractBalance
-                }
-            })
-            let nativeBalance = await provider.getBalance(selectedAddress)
-                .catch(() => { return undefined })
-            if (nativeBalance !== undefined) {
-                if (!balances[chainId].native) balances[chainId].native = {}
-                balances[chainId].native.timestamp = block
-                balances[chainId].native.balance = nativeBalance
-            }
-            assignToWeb3State({ balances })
-        }
-    }
-    async function blockPoll() {
-        let { provider } = get(Web3)
-        let block = await provider.getBlockNumber()
-        let network = await provider.getNetwork()
-            .catch(() => { return undefined })
-        if (network) {
-            assignToWeb3State({ block })
-            updateBalances()
-        }
-        setTimeout(blockPoll, 1000)
-    }
-    blockPoll()
-})()
+
 function getSigner() {
-    let { provider } = get(Web3)
-    provider.getSigner()
+    get(Web3).provider.getSigner()
+}
+
+// @ts-ignore
+if (import.meta.hot) {
+    // @ts-ignore
+    import.meta.hot.accept()
+    // @ts-ignore
+    import.meta.hot.dispose(() => {
+        clearInterval(pollId)
+        window.ethereum.removeAllListeners()
+    })
 }
 
 export { Web3, getSigner }
