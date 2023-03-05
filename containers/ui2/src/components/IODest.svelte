@@ -1,6 +1,5 @@
 <script lang="ts">
-    // @ts-ignore
-    import chains from '../json/chains.json'
+    import chains from '../../../../json/chains.json'
     import Select, { Option } from '@smui/select'
     import { Subreq } from '../stores/Subreq.mjs'
     import { Web3 } from '../stores/Web3.mjs'
