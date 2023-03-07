@@ -22,11 +22,16 @@
         || tBInsufficient
         || nBInsufficient
         || loading
-    function onClick() {
-        let value = $Subreq.map(subreq => subreq.input).reduce((p, c) => p + c)
-        $Web3.tangle.trade($Subreq, { value })
+    async function onClick() {
         loading = true
-        setTimeout(() => loading = false, 5000)
+        let value = $Subreq.map(subreq => subreq.input).reduce((p, c) => p + c)
+        let txRes = await $Web3.tangle.trade($Subreq, { value })
+            .catch(e => {
+                loading = false
+                if (e instanceof Error) throw e
+                else throw new Error(e)
+            })
+        loading = false
     }
 </script>
 
