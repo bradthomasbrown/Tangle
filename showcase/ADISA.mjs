@@ -33,7 +33,8 @@ class Verifier extends EventEmitter {
     // a user can prove an element exists in the structure by submitting
     // the element and a proof
     // the proof is constructed by the prover
-    verify = (element, proof) => {
+    verify = (proof) => {
+        let { element } = proof
         let hash = H.copy()
         hash.update(element)
         let n = hash.digest('hex')
@@ -78,6 +79,7 @@ class Prover {
         let tree = this.getTree(id, subtree)
         let proof = this.buildProof(index, tree)
         return {
+            element,
             hashes: proof, 
             index: id % 2 ** subtree, 
             subtree: subtree
@@ -154,7 +156,6 @@ verifier.insert('baz')
 
 let element = 'hello world'
 let proof = prover.getProof(element)
-let verified = verifier.verify(element, proof)
-console.log(element)
+let verified = verifier.verify(proof)
 console.log(proof)
 console.log(verified)
