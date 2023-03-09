@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto'
 import { EventEmitter } from 'node:events'
-let ruler = (x) => Math.floor(Math.log2(x ^ x + 1))
+let { floor, log2 } = Math
+let fl2 = x => floor(log2(x))
+let R = x => fl2(x ^ x + 1)
 let H = createHash('sha256')
 
 class Verifier extends EventEmitter {
@@ -86,22 +88,45 @@ class Prover {
         }
     }
 
-    getSubtrees(id) {
-        let ids = [id]
-        let nextAdd = x => x + 2 ** ruler(x)
-        let nextDel = x => x + 2 ** (ruler(x) + 1)
-        let fn = () => {
-            let na = nextAdd(ids[ids.length - 1])
-            let nd = nextDel(ids[0])
-            if (na >= this.verifier.count && nd >= this.verifier.count)
-                return ids.map(id => ruler(id))
-            if (na <= nd) ids.push(na)
-            else ids.shift()
-            return () => fn(ids)
-        }
-        let thunk = fn()
-        while (typeof thunk === 'function') thunk = thunk()
-        return thunk
+    getSubtrees(id, count=this.verifier.count) {
+
+        // O(1) time
+        let shake = (2<<fl2(count & ~id)) - 1
+        let b1_i = fl2(shake & ~id)
+        let b2_i = fl2(shake & ~id & ~(1<<b1_i))
+        let b3_i = fl2(shake & ~id & ~(1<<b1_i) & ~(1<<b2_i))
+        let b1_v = count & (1<<b1_i)
+        let b2_v = count & (1<<b2_i)
+        let idBGt2 = b2_i < 0 ? id : id & ~((1<<(b2_i+1)) - 1)
+        let dirty = count & ~b1_v
+        dirty &= b2_v ? ~b2_v : dirty
+        dirty &= (1<<b1_i) - 1
+        let good = b1_v > 0 && (b2_v > 0 || b2_i < 0) && dirty === 0
+        let fix1 = (count | (1<<b2_i)) & ~dirty
+        let high = fix1 > count
+        let fix2 = ((fix1 - b1_v) | (b3_i < 0 ? 0 : (1<<b3_i))) | idBGt2
+        let final = good ? count : (high ? fix2 : fix1)
+        let tree1 = fl2(final & ~id)
+        let tree2 = fl2(count & ~id)
+        let trees = [tree1, tree2]
+        return trees
+
+        // previous function, O(log n) time
+        // let ids = [id]
+        // let nextAdd = x => x + 2 ** R(x)
+        // let nextDel = x => x + 2 ** (R(x) + 1)
+        // let fn = () => {
+        //     let na = nextAdd(ids[ids.length - 1])
+        //     let nd = nextDel(ids[0])
+        //     if (na >= count && nd >= count)
+        //         return [ids.map(id => R(id)), trees]
+        //     if (na <= nd) ids.push(na)
+        //     else ids.shift()
+        //     return () => fn(ids)
+        // }
+        // let thunk = fn()
+        // while (typeof thunk === 'function') thunk = thunk()
+        // return thunk
     }
 
     getTree(id, subtree) {
@@ -149,13 +174,19 @@ let verifier = new Verifier()
 let prover = new Prover(verifier)
 
 // insert some data into verifier
-verifier.insert('hello world')
-verifier.insert('foo')
-verifier.insert('bar')
-verifier.insert('baz')
+// verifier.insert('hello world')
+// verifier.insert('foo')
+// verifier.insert('bar')
+// verifier.insert('baz')
 
-let element = 'hello world'
-let proof = prover.getProof(element)
-let verified = verifier.verify(proof)
-console.log(proof)
-console.log(verified)
+// let element = 'hello world'
+// let proof = prover.getProof(element)
+// let verified = verifier.verify(proof)
+// console.log(proof)
+// console.log(verified)
+
+let id = parseInt(Math.random() * 1000)
+let N = id + parseInt(Math.random() * 1000)
+console.log(id, N)
+for (let count = id + 1; count < id + 1 + N; count++)
+    console.log(prover.getSubtrees(id, count))
